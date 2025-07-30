@@ -207,10 +207,16 @@ const Signup = () => {
               Sign in here
             </Link>
           </p>
+          <button 
+            onClick={() => navigate("/role-select")} 
+            className={styles.backBtn}
+          >
+            ← Back to Role Selection
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
-export default Signup
+export default Signup 

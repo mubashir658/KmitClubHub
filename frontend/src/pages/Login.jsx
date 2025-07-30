@@ -128,10 +128,16 @@ const Login = () => {
         <div className={styles.authFooter}>
           <p>
             Don't have an account?
-            <Link to="/signup" className={styles.authLink}>
+            <Link to={`/signup?role=${role}`} className={styles.authLink}>
               Sign up here
             </Link>
           </p>
+          <button 
+            onClick={() => navigate("/role-select")} 
+            className={styles.backBtn}
+          >
+            ← Back to Role Selection
+          </button>
         </div>
       </div>
     </div>
