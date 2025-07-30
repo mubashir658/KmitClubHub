@@ -1,0 +1,99 @@
+.clubCard {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.clubCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.clubLogo {
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.clubLogo img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+}
+
+.clubInfo {
+  padding: 20px;
+}
+
+.clubName {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.clubDescription {
+  color: #7f8c8d;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.clubStats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.memberCount {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+.coordinator {
+  color: #8e44ad;
+  font-weight: 500;
+}
+
+.viewClubBtn {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: transform 0.3s ease;
+}
+
+.viewClubBtn:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .clubLogo {
+    height: 150px;
+  }
+
+  .clubLogo img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .clubInfo {
+    padding: 15px;
+  }
+
+  .clubName {
+    font-size: 1.1rem;
+  }
+}
