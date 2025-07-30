@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import ClubCard from "../components/ClubCard"
 import styles from "./Home.module.css"
 
 const imageList = [
@@ -12,18 +13,78 @@ const imageList = [
 ]
 
 const clubsData = [
-  { name: "Aakarshan", logo: "/assets/club logos/Aakarshan-logo.jpg" },
-  { name: "Aalap", logo: "/assets/club logos/Aalap-Logo.jpg" },
-  { name: "Abhinaya", logo: "/assets/club logos/AbhinayaLogo.jpg" },
-  { name: "Kaivalya", logo: "/assets/club logos/Kaivalya-Logo.jpeg" },
-  { name: "Kmitra", logo: "/assets/club logos/Kmitra-Logo.jpg" },
-  { name: "Kreeda", logo: "/assets/club logos/Kreeda-Logo.jpg" },
-  { name: "Mudra", logo: "/assets/club logos/Mudra-Logo.jpg" },
-  { name: "OC", logo: "/assets/club logos/OC-Logo.jpg" },
-  { name: "PR", logo: "/assets/club logos/PR-Logo.jpg" },
-  { name: "Recurse", logo: "/assets/club logos/Recurse-Logo.jpg" },
-  { name: "TOL", logo: "/assets/club logos/TOL-Logo.png" },
-  { name: "Vachan", logo: "/assets/club logos/Vachan-Logo.jpg" },
+  { 
+    _id: "64a1b2c3d4e5f67890123456",
+    name: "Aalap - The Music Club", 
+    logoUrl: "/assets/club logos/Aalap-Logo.jpg",
+    description: "The first club formed in KMIT, AALAP – The Music Club of KMIT visions in exploring the various new aspects of music, as the tagline says #EXPLORE YOURSELF."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123457",
+    name: "Aakarshan", 
+    logoUrl: "/assets/club logos/Aakarshan-logo.jpg",
+    description: "Aakarshan club focuses on technical innovation and skill development."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123458",
+    name: "Abhinaya", 
+    logoUrl: "/assets/club logos/AbhinayaLogo.jpg",
+    description: "Abhinaya is the cultural club that promotes arts and cultural activities."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123459",
+    name: "Kaivalya", 
+    logoUrl: "/assets/club logos/Kaivalya-Logo.jpeg",
+    description: "Kaivalya club focuses on spiritual and wellness activities."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123460",
+    name: "Kmitra", 
+    logoUrl: "/assets/club logos/Kmitra-Logo.jpg",
+    description: "Kmitra is the social service club dedicated to community welfare."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123461",
+    name: "Kreeda", 
+    logoUrl: "/assets/club logos/Kreeda-Logo.jpg",
+    description: "Kreeda is the sports club promoting physical fitness and sportsmanship."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123462",
+    name: "Mudra", 
+    logoUrl: "/assets/club logos/Mudra-Logo.jpg",
+    description: "Mudra is the dance club celebrating the art of movement."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123463",
+    name: "OC", 
+    logoUrl: "/assets/club logos/OC-Logo.jpg",
+    description: "OC is the organizing committee responsible for major events."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123464",
+    name: "PR", 
+    logoUrl: "/assets/club logos/PR-Logo.jpg",
+    description: "PR is the public relations club managing communications and outreach."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123465",
+    name: "Recurse", 
+    logoUrl: "/assets/club logos/Recurse-Logo.jpg",
+    description: "Recurse is the programming and coding club for tech enthusiasts."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123466",
+    name: "TOL", 
+    logoUrl: "/assets/club logos/TOL-Logo.png",
+    description: "TOL is the technical club focusing on engineering projects."
+  },
+  { 
+    _id: "64a1b2c3d4e5f67890123467",
+    name: "Vachan", 
+    logoUrl: "/assets/club logos/Vachan-Logo.jpg",
+    description: "Vachan is the literary club promoting reading and writing skills."
+  },
 ]
 
 const Home = () => {
@@ -111,11 +172,8 @@ const Home = () => {
         <div className="container">
           <h2>Clubs</h2>
           <div className={styles.clubsGrid}>
-            {clubsData.map((club, idx) => (
-              <div className={styles.clubCardSmall} key={idx}>
-                <img src={club.logo} alt={club.name} className={styles.clubLogoSmall} />
-                <div className={styles.clubName}>{club.name}</div>
-              </div>
+            {clubsData.map((club) => (
+              <ClubCard key={club._id} club={club} />
             ))}
           </div>
         </div>

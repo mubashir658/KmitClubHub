@@ -7,11 +7,17 @@ const ClubCard = ({ club }) => {
   const navigate = useNavigate()
 
   const handleClubClick = (e) => {
+    console.log('ClubCard clicked:', club.name, 'Authenticated:', isAuthenticated)
     if (!isAuthenticated) {
       e.preventDefault()
+      console.log('Redirecting to login...')
       navigate("/login")
+    } else {
+      console.log('Navigating to club detail:', `/clubs/${club._id}`)
     }
   }
+
+  console.log('Rendering ClubCard:', club.name, 'ID:', club._id)
 
   return (
     <div className={styles.clubCard}>
@@ -24,11 +30,6 @@ const ClubCard = ({ club }) => {
         <p className={styles.clubDescription}>
           {club.description.length > 100 ? `${club.description.substring(0, 100)}...` : club.description}
         </p>
-
-        <div className={styles.clubStats}>
-          <span className={styles.memberCount}>{club.members?.length || 0} Members</span>
-          <span className={styles.coordinator}>Coordinator: {club.coordinator?.name}</span>
-        </div>
 
         <Link 
           to={`/clubs/${club._id}`} 

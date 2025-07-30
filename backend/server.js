@@ -20,6 +20,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kmit-club
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/clubs', require('./routes/clubRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

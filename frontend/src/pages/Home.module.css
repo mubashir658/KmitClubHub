@@ -194,13 +194,13 @@
 }
 .clubsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   justify-items: center;
 }
 
 /* Remove/override previous carousel and large club card styles */
-.carouselSection, .carousel, .carouselImageWrapper, .carouselImage, .clubCard, .clubLogo {
+.carouselSection, .carousel, .carouselImageWrapper, .carouselImage {
   display: none !important;
 }
 

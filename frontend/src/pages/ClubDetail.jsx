@@ -13,56 +13,30 @@ const ClubDetail = () => {
   const [club, setClub] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [enrolling, setEnrolling] = useState(false)
+
+  console.log('ClubDetail mounted with ID:', id)
 
   useEffect(() => {
     fetchClub()
+    // eslint-disable-next-line
   }, [id])
 
   const fetchClub = async () => {
+    console.log('Fetching club with ID:', id)
     try {
       const response = await axios.get(`/api/clubs/${id}`)
+      console.log('Club data received:', response.data)
       setClub(response.data)
     } catch (error) {
-      setError("Failed to load club details")
       console.error("Error fetching club:", error)
+      setError("Failed to load club details")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleEnroll = async () => {
-    if (!user) {
-      navigate("/login")
-      return
-    }
-
-    if (user.role !== "student") {
-      setError("Only students can enroll in clubs")
-      return
-    }
-
-    setEnrolling(true)
-    try {
-      await axios.post(`/api/clubs/${id}/join`)
-      alert("Enrollment request submitted successfully!")
-      fetchClub() // Refresh club data
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to submit enrollment request")
-    } finally {
-      setEnrolling(false)
-    }
-  }
-
-  if (loading) {
-    return <div className="loading">Loading club details...</div>
-  }
-
-  if (error && !club) {
-    return <div className="error">{error}</div>
-  }
-
-  const isAlreadyMember = user && club.members?.some((member) => member._id === user.id)
+  if (loading) return <div className="loading">Loading club details...</div>
+  if (error && !club) return <div className="error">{error}</div>
 
   return (
     <div className={styles.clubDetail}>
@@ -75,93 +49,49 @@ const ClubDetail = () => {
           <div className={styles.clubInfo}>
             <h1 className={styles.clubName}>{club.name}</h1>
             <p className={styles.clubDescription}>{club.description}</p>
-            <div className={styles.clubStats}>
-              <span className={styles.memberCount}>{club.members?.length || 0} Members</span>
-              <span className={styles.coordinator}>
-                Coordinator: {club.coordinator?.name} ({club.coordinator?.rollNo})
-              </span>
-            </div>
+            {club.instagramLink && (
+              <a href={club.instagramLink} target="_blank" rel="noopener noreferrer" className={styles.instagramLink}>
+                Instagram
+              </a>
+            )}
           </div>
         </div>
 
-        {error && <div className="error">{error}</div>}
-
-        {/* Club Highlights */}
-        {club.highlights && club.highlights.length > 0 && (
+        {/* Team Heads */}
+        {club.teamHeads && club.teamHeads.length > 0 && (
           <div className={styles.section}>
-            <h2>Highlights</h2>
-            <ul className={styles.highlights}>
-              {club.highlights.map((highlight, index) => (
-                <li key={index}>{highlight}</li>
+            <h2>Team Heads</h2>
+            <ul>
+              {club.teamHeads.map((head, idx) => (
+                <li key={idx}>
+                  <strong>{head.name}</strong> ({head.rollNumber}) - {head.designation}
+                </li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Gallery */}
-        {club.gallery && club.gallery.length > 0 && (
+        {/* Past Events */}
+        {club.eventsConducted && club.eventsConducted.length > 0 && (
           <div className={styles.section}>
-            <h2>Gallery</h2>
-            <div className={styles.gallery}>
-              {club.gallery.map((image, index) => (
-                <div key={index} className={styles.galleryItem}>
-                  <img src={image || "/placeholder.svg"} alt={`${club.name} event ${index + 1}`} />
-                </div>
+            <h2>Past Events</h2>
+            <ul>
+              {club.eventsConducted.map((event, idx) => (
+                <li key={idx}>{event}</li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
 
-        {/* Coordinator Info */}
-        <div className={styles.section}>
-          <h2>Coordinator Information</h2>
-          <div className={styles.coordinatorCard}>
-            <div className={styles.coordinatorInfo}>
-              <h3>{club.coordinator?.name}</h3>
-              <p>Roll No: {club.coordinator?.rollNo}</p>
-              <p>Email: {club.coordinator?.email}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Members */}
-        {club.members && club.members.length > 0 && (
+        {/* Upcoming Events */}
+        {club.upcomingEvents && club.upcomingEvents.length > 0 && (
           <div className={styles.section}>
-            <h2>Members ({club.members.length})</h2>
-            <div className={styles.membersGrid}>
-              {club.members.map((member) => (
-                <div key={member._id} className={styles.memberCard}>
-                  <h4>{member.name}</h4>
-                  <p>{member.rollNo}</p>
-                  <p>
-                    {member.branch} - {member.year} Year
-                  </p>
-                </div>
+            <h2>Upcoming Events</h2>
+            <ul>
+              {club.upcomingEvents.map((event, idx) => (
+                <li key={idx}>{event}</li>
               ))}
-            </div>
-          </div>
-        )}
-
-        {/* Enrollment Button */}
-        {user?.role === "student" && (
-          <div className={styles.enrollSection}>
-            {isAlreadyMember ? (
-              <button className={`${styles.enrollBtn} ${styles.enrolled}`} disabled>
-                Already a Member ✓
-              </button>
-            ) : (
-              <button className={styles.enrollBtn} onClick={handleEnroll} disabled={enrolling}>
-                {enrolling ? "Submitting Request..." : "Enroll in Club"}
-              </button>
-            )}
-          </div>
-        )}
-
-        {!user && (
-          <div className={styles.enrollSection}>
-            <button className={styles.enrollBtn} onClick={() => navigate("/login")}>
-              Login to Enroll
-            </button>
+            </ul>
           </div>
         )}
       </div>
