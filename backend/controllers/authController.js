@@ -107,6 +107,21 @@ exports.register = async (req, res) => {
       userData.rollNo = rollNo;
     }
 
+    // Coordinator clubKey validation
+    if (role === 'coordinator') {
+      const { clubKey, club } = req.body;
+      if (!clubKey || !club) {
+        return res.status(400).json({ message: 'Club and club pass key are required for coordinator signup' });
+      }
+      const Club = require('../models/Club');
+      const clubDoc = await Club.findOne({ name: club });
+      if (!clubDoc || clubDoc.clubKey !== clubKey) {
+        return res.status(400).json({ message: 'Invalid club pass key' });
+      }
+      userData.club = club;
+      userData.clubKey = clubKey;
+    }
+
     // Create new user
     console.log('Creating user with model:', userModel.modelName)
     const user = new userModel(userData);

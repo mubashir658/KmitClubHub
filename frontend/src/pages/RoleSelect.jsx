@@ -31,11 +31,6 @@ const RoleSelect = () => {
             <p>Manage your club and organize events</p>
           </div>
           
-          <div className={styles.roleCard} onClick={() => handleRoleSelect("admin")}>
-            <div className={styles.roleIcon}>👨‍💻</div>
-            <h3>Admin</h3>
-            <p>Manage the platform and all clubs</p>
-          </div>
         </div>
 
         <div className={styles.authFooter}>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import styles from "./Auth.module.css"
+import axios from "axios";
 
 function getRoleFromQuery(search) {
   const params = new URLSearchParams(search)
@@ -26,6 +27,9 @@ const Signup = () => {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [clubs, setClubs] = useState([]);
+  const [clubKey, setClubKey] = useState("");
+  const [selectedClub, setSelectedClub] = useState("");
 
   const { register } = useAuth()
   const navigate = useNavigate()
@@ -37,6 +41,12 @@ const Signup = () => {
       navigate("/role-select", { replace: true })
     }
   }, [role, navigate])
+
+  useEffect(() => {
+    if (role === "coordinator") {
+      axios.get("/api/clubs").then(res => setClubs(res.data)).catch(() => setClubs([]));
+    }
+  }, [role]);
 
   const handleChange = (e) => {
     setFormData({
@@ -67,6 +77,10 @@ const Signup = () => {
       password: formData.password,
       role: role, // Use the role from URL parameter
       rollNo: formData.rollNo,
+    }
+    if (role === "coordinator") {
+      userData.club = selectedClub;
+      userData.clubKey = clubKey;
     }
 
     // Debug logging
@@ -161,6 +175,41 @@ const Signup = () => {
                 placeholder="Enter your roll number"
               />
             </div>
+          )}
+
+          {/* Only show club selection and club key for coordinator */}
+          {role === "coordinator" && (
+            <>
+              <div className={styles.formGroup}>
+                <label htmlFor="club">Select Club</label>
+                <select
+                  id="club"
+                  name="club"
+                  value={selectedClub}
+                  onChange={e => setSelectedClub(e.target.value)}
+                  required
+                  className={styles.formControl}
+                >
+                  <option value="">Select a club</option>
+                  {clubs.map(club => (
+                    <option key={club._id} value={club.name}>{club.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="clubKey">Club Pass Key</label>
+                <input
+                  type="password"
+                  id="clubKey"
+                  name="clubKey"
+                  value={clubKey}
+                  onChange={e => setClubKey(e.target.value)}
+                  required
+                  className={styles.formControl}
+                  placeholder="Enter club pass key"
+                />
+              </div>
+            </>
           )}
 
           <div className={styles.formRow}>

@@ -138,6 +138,50 @@ const AdminDashboard = () => {
       highlights: "",
     })
 
+    // Club Key Management State
+    const [clubKeys, setClubKeys] = useState([]);
+    const [showKey, setShowKey] = useState({});
+    const [editKey, setEditKey] = useState({});
+    const [newKey, setNewKey] = useState({});
+
+    useEffect(() => {
+      // Fetch club keys for admin
+      axios.get("/api/clubs/admin/club-keys", {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
+        .then(res => setClubKeys(res.data))
+        .catch(() => setClubKeys([]));
+    }, []);
+
+    const handleShowKey = (clubId) => {
+      setShowKey(prev => ({ ...prev, [clubId]: !prev[clubId] }));
+    };
+
+    const handleEditKey = (clubId) => {
+      setEditKey(prev => ({ ...prev, [clubId]: true }));
+      setNewKey(prev => ({ ...prev, [clubId]: clubKeys.find(c => c._id === clubId)?.clubKey || "" }));
+    };
+
+    const handleKeyChange = (clubId, value) => {
+      setNewKey(prev => ({ ...prev, [clubId]: value }));
+    };
+
+    const handleSaveKey = async (clubId) => {
+      try {
+        await axios.put(`/api/clubs/admin/update-club-key/${clubId}`, { clubKey: newKey[clubId] }, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setEditKey(prev => ({ ...prev, [clubId]: false }));
+        // Refresh keys
+        const res = await axios.get("/api/clubs/admin/club-keys", {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setClubKeys(res.data);
+      } catch (err) {
+        alert("Failed to update club key");
+      }
+    };
+
     const handleClubSubmit = async (e) => {
       e.preventDefault()
       try {
@@ -235,6 +279,46 @@ const AdminDashboard = () => {
               Create Club
             </button>
           </form>
+        </div>
+
+        <div className={styles.section}>
+          <h2>Club Keys Management</h2>
+          <div className={styles.clubsGrid}>
+            {clubKeys.map(club => (
+              <div key={club._id} className={styles.clubCard}>
+                <h3>{club.name}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {editKey[club._id] ? (
+                    <>
+                      <input
+                        type="text"
+                        value={newKey[club._id] || ""}
+                        onChange={e => handleKeyChange(club._id, e.target.value)}
+                        className={styles.formControl}
+                        style={{ width: 120 }}
+                      />
+                      <button onClick={() => handleSaveKey(club._id)} className={styles.submitBtn}>Save</button>
+                      <button onClick={() => setEditKey(prev => ({ ...prev, [club._id]: false }))}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type={showKey[club._id] ? "text" : "password"}
+                        value={club.clubKey}
+                        readOnly
+                        className={styles.formControl}
+                        style={{ width: 120 }}
+                      />
+                      <button onClick={() => handleShowKey(club._id)}>
+                        {showKey[club._id] ? "Hide" : "Show"}
+                      </button>
+                      <button onClick={() => handleEditKey(club._id)} className={styles.submitBtn}>Edit</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className={styles.section}>

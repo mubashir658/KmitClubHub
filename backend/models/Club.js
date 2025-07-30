@@ -8,12 +8,13 @@ const teamHeadSchema = new mongoose.Schema({
 
 const clubSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
-  logoUrl: { type: String, required: true }, // URL or path to logo
+  logoUrl: { type: String, }, // URL or path to logo
   description: { type: String, required: true },
   instagramLink: { type: String },
   teamHeads: [teamHeadSchema],
   eventsConducted: [String],
   upcomingEvents: [String],
+  clubKey: { type: String, required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Club', clubSchema);
