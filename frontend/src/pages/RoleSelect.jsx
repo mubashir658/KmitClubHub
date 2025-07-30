@@ -6,8 +6,12 @@ import styles from "./Auth.module.css"
 const RoleSelect = () => {
   const navigate = useNavigate()
 
-  const handleRoleSelect = (role) => {
-    navigate(`/login?role=${role}`)
+  const handleRoleSelect = (role, action) => {
+    if (action === "login") {
+      navigate(`/login?role=${role}`)
+    } else if (action === "signup") {
+      navigate(`/signup?role=${role}`)
+    }
   }
 
   return (
@@ -15,20 +19,44 @@ const RoleSelect = () => {
       <div className={styles.authCard}>
         <div className={styles.authHeader}>
           <h2>Select Your Role</h2>
-          <p>Choose your role to continue to login</p>
+          <p>Choose your role to continue</p>
         </div>
         <div className={styles.roleSelection}>
-          <div className={styles.roleCard} onClick={() => handleRoleSelect("student")}> 
+          <div className={styles.roleCard}>
             <h3>Student</h3>
-            <p>Login as a student to join clubs and events</p>
+            <p>Join clubs and participate in events</p>
+            <div className={styles.roleActions}>
+              <button onClick={() => handleRoleSelect("student", "login")} className={styles.roleBtn}>
+                Login
+              </button>
+              <button onClick={() => handleRoleSelect("student", "signup")} className={styles.roleBtn}>
+                Sign Up
+              </button>
+            </div>
           </div>
-          <div className={styles.roleCard} onClick={() => handleRoleSelect("coordinator")}> 
+          <div className={styles.roleCard}>
             <h3>Coordinator</h3>
-            <p>Login as a club coordinator to manage your club</p>
+            <p>Manage your club and organize events</p>
+            <div className={styles.roleActions}>
+              <button onClick={() => handleRoleSelect("coordinator", "login")} className={styles.roleBtn}>
+                Login
+              </button>
+              <button onClick={() => handleRoleSelect("coordinator", "signup")} className={styles.roleBtn}>
+                Sign Up
+              </button>
+            </div>
           </div>
-          <div className={styles.roleCard} onClick={() => handleRoleSelect("admin")}> 
+          <div className={styles.roleCard}>
             <h3>Admin</h3>
-            <p>Login as an admin to manage the platform</p>
+            <p>Manage the platform and all clubs</p>
+            <div className={styles.roleActions}>
+              <button onClick={() => handleRoleSelect("admin", "login")} className={styles.roleBtn}>
+                Login
+              </button>
+              <button onClick={() => handleRoleSelect("admin", "signup")} className={styles.roleBtn}>
+                Sign Up
+              </button>
+            </div>
           </div>
         </div>
       </div>

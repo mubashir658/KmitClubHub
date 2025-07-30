@@ -33,6 +33,8 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await axios.get("/api/auth/profile")
+          console.log('Profile response:', response.data)
+          console.log('Profile role:', response.data.role)
           setUser(response.data)
         } catch (error) {
           console.error("Error fetching user:", error)
@@ -52,6 +54,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post("/api/auth/login", { email, password, role })
       const { token: newToken, user: userData } = response.data
+
+      // Debug logging
+      console.log('Login response:', response.data)
+      console.log('User data received:', userData)
+      console.log('User role:', userData.role)
 
       // Store token and update state
       localStorage.setItem("token", newToken)
@@ -73,13 +80,23 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
+      console.log('AuthContext: Starting registration with userData:', userData)
+      
       const response = await axios.post("/api/auth/register", userData)
       const { token: newToken, user: userInfo } = response.data
+
+      // Debug logging
+      console.log('Registration response:', response.data)
+      console.log('User info received:', userInfo)
+      console.log('User role:', userInfo.role)
+      console.log('Token received:', !!newToken)
 
       // Store token and update state
       localStorage.setItem("token", newToken)
       setToken(newToken)
       setUser(userInfo)
+      
+      console.log('AuthContext: User state updated with:', userInfo)
       
       // Update axios headers
       axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`
@@ -87,6 +104,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userInfo }
     } catch (error) {
       console.error("Registration error:", error)
+      console.error("Error response:", error.response?.data)
       return {
         success: false,
         message: error.response?.data?.message || "Registration failed. Please try again.",

@@ -17,7 +17,24 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />
+    // Redirect to the correct dashboard based on user's role
+    const getCorrectDashboard = (role) => {
+      switch (role) {
+        case "student":
+          return "/student/dashboard"
+        case "coordinator":
+          return "/coordinator/dashboard"
+        case "admin":
+          return "/admin/dashboard"
+        default:
+          return "/"
+      }
+    }
+    
+    console.log('User role:', user.role, 'Allowed roles:', allowedRoles)
+    console.log('Redirecting to correct dashboard:', getCorrectDashboard(user.role))
+    
+    return <Navigate to={getCorrectDashboard(user.role)} replace />
   }
 
   return children

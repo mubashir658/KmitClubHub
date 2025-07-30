@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
+import DebugInfo from "./components/DebugInfo"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
@@ -19,6 +20,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
+          <DebugInfo />
           <Navbar />
           <main className="main-content">
             <Routes>
@@ -59,6 +61,9 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Catch-all route for unmatched paths */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
           <Footer />

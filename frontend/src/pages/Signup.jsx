@@ -1,9 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import styles from "./Auth.module.css"
+
+function getRoleFromQuery(search) {
+  const params = new URLSearchParams(search)
+  return params.get("role")
+}
+
+const roleLabels = {
+  student: "Student",
+  coordinator: "Coordinator", 
+  admin: "Admin"
+}
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +30,13 @@ const Signup = () => {
   const { register } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const role = getRoleFromQuery(location.search)
+
+  useEffect(() => {
+    if (!role) {
+      navigate("/role-select", { replace: true })
+    }
+  }, [role, navigate])
 
   const handleChange = (e) => {
     setFormData({
@@ -47,15 +65,25 @@ const Signup = () => {
       name: formData.name,
       email: formData.email,
       password: formData.password,
-      role: "student", // Default role for signup
+      role: role, // Use the role from URL parameter
       rollNo: formData.rollNo,
     }
+
+    // Debug logging
+    console.log('Sending userData to backend:', userData)
+    console.log('Role from URL:', role)
 
     const result = await register(userData)
 
     if (result.success) {
-      // Redirect to student dashboard
-      const intendedPath = location.state?.from || "/student/dashboard"
+      // Debug logging
+      console.log('Registration successful:', result.user)
+      console.log('User role:', result.user.role)
+      console.log('Expected role from URL:', role)
+      
+      // Redirect based on user role
+      const intendedPath = location.state?.from || getDashboardPath(role)
+      console.log('Redirecting to:', intendedPath)
       navigate(intendedPath)
     } else {
       setError(result.message)
@@ -64,12 +92,27 @@ const Signup = () => {
     setLoading(false)
   }
 
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case "student":
+        return "/student/dashboard"
+      case "coordinator":
+        return "/coordinator/dashboard"
+      case "admin":
+        return "/admin/dashboard"
+      default:
+        return "/"
+    }
+  }
+
+  if (!role) return null
+
   return (
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <div className={styles.authHeader}>
-          <h2>Join KMIT Club Hub</h2>
-          <p>Create your student account to get started</p>
+          <h2>Sign Up as {roleLabels[role] || "User"}</h2>
+          <p>Create your KMIT Club Hub account</p>
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
@@ -103,19 +146,22 @@ const Signup = () => {
             />
           </div>
 
-          <div className={styles.formGroup}>
-            <label htmlFor="rollNo">Roll Number</label>
-            <input
-              type="text"
-              id="rollNo"
-              name="rollNo"
-              value={formData.rollNo}
-              onChange={handleChange}
-              required
-              className={styles.formControl}
-              placeholder="Enter your roll number"
-            />
-          </div>
+          {/* Only show roll number for student and coordinator */}
+          {(role === "student" || role === "coordinator") && (
+            <div className={styles.formGroup}>
+              <label htmlFor="rollNo">Roll Number</label>
+              <input
+                type="text"
+                id="rollNo"
+                name="rollNo"
+                value={formData.rollNo}
+                onChange={handleChange}
+                required
+                className={styles.formControl}
+                placeholder="Enter your roll number"
+              />
+            </div>
+          )}
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
@@ -157,7 +203,7 @@ const Signup = () => {
         <div className={styles.authFooter}>
           <p>
             Already have an account?
-            <Link to="/login" className={styles.authLink}>
+            <Link to={`/login?role=${role}`} className={styles.authLink}>
               Sign in here
             </Link>
           </p>

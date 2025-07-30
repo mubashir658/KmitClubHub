@@ -50,8 +50,14 @@ const Login = () => {
     const result = await login(formData.email, formData.password, role)
 
     if (result.success) {
+      // Debug logging
+      console.log('Login successful:', result.user)
+      console.log('User role:', result.user.role)
+      console.log('Expected role from URL:', role)
+      
       // Redirect based on user role or intended destination
       const intendedPath = location.state?.from || getDashboardPath(result.user.role)
+      console.log('Redirecting to:', intendedPath)
       navigate(intendedPath)
     } else {
       setError(result.message)

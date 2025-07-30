@@ -17,6 +17,11 @@ const coordinatorSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  rollNo: { 
+    type: String, 
+    required: true, 
+    unique: true 
+  },
   club: { 
     type: String 
   },
