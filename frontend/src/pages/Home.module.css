@@ -82,64 +82,126 @@
   border: 5px solid rgba(255, 255, 255, 0.3);
 }
 
-.recentEvents {
-  padding: 80px 0;
-  background: #f8f9fa;
-}
-
-.recentEvents h2 {
-  text-align: center;
-  margin-bottom: 3rem;
-  font-size: 2.5rem;
-  color: #2c3e50;
-}
-
-.eventsScroll {
+.sliderSection {
+  padding: 40px 0 0 0;
+  background: #fff;
   display: flex;
-  gap: 2rem;
-  overflow-x: auto;
-  padding: 20px 0;
-  scroll-behavior: smooth;
+  justify-content: center;
 }
 
-.eventImage {
-  min-width: 300px;
-  height: 200px;
-  border-radius: 15px;
-  overflow: hidden;
+.sliderWrapper {
+  width: 1200px;
+  height: 400px;
   position: relative;
-  cursor: pointer;
-  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 98vw;
 }
 
-.eventImage:hover {
-  transform: scale(1.05);
+@media (max-width: 1300px) {
+  .sliderWrapper {
+    width: 98vw;
+    height: 320px;
+  }
 }
-
-.eventImage img {
+@media (max-width: 900px) {
+  .sliderWrapper {
+    width: 98vw;
+    height: 200px;
+  }
+}
+.sliderImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.eventOverlay {
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
   position: absolute;
-  bottom: 0;
   left: 0;
-  right: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-  color: white;
-  padding: 20px;
+  top: 0;
+  opacity: 0;
+  transition: opacity 0.7s;
+  z-index: 1;
 }
 
-.eventOverlay h4 {
-  font-size: 1.1rem;
-  margin-bottom: 5px;
+.sliderImage.active {
+  opacity: 1;
+  z-index: 2;
 }
 
-.eventOverlay p {
-  font-size: 0.9rem;
-  opacity: 0.8;
+.sliderArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.sliderArrow:hover {
+  background: rgba(0,0,0,0.55);
+}
+.sliderArrow.left {
+  left: 18px;
+}
+.sliderArrow.right {
+  right: 18px;
+}
+
+/* Smaller, compact club cards */
+.clubCardSmall {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1.2rem 0.5rem 0.8rem 0.5rem;
+  text-align: center;
+  width: 170px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.15s;
+}
+.clubCardSmall:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+.clubLogoSmall {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 10px;
+  margin-bottom: 0.7rem;
+  background: #f0f0f0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.clubName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-top: 0.2rem;
+  word-break: break-word;
+}
+.clubsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 2rem;
+  justify-items: center;
+}
+
+/* Remove/override previous carousel and large club card styles */
+.carouselSection, .carousel, .carouselImageWrapper, .carouselImage, .clubCard, .clubLogo {
+  display: none !important;
 }
 
 .aboutSection {
@@ -210,24 +272,6 @@
 .stat p {
   color: #7f8c8d;
   font-weight: 500;
-}
-
-.clubsSection {
-  padding: 80px 0;
-  background: #f8f9fa;
-}
-
-.clubsSection h2 {
-  text-align: center;
-  margin-bottom: 3rem;
-  font-size: 2.5rem;
-  color: #2c3e50;
-}
-
-.clubsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
 }
 
 @media (max-width: 768px) {
