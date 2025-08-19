@@ -50,9 +50,9 @@ export const AuthProvider = ({ children }) => {
     checkAuth()
   }, [token])
 
-  const login = async (email, password, role) => {
+  const login = async (rollNo, password) => {
     try {
-      const response = await axios.post("/api/auth/login", { email, password, role })
+      const response = await axios.post("/api/auth/login", { rollNo, password })
       const { token: newToken, user: userData } = response.data
 
       // Debug logging

@@ -1,6 +1,4 @@
-const Student = require('../models/Student');
-const Coordinator = require('../models/Coordinator');
-const Admin = require('../models/Admin');
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 // Generate JWT token
@@ -9,147 +7,62 @@ const generateToken = (userId, role) => {
   return jwt.sign({ userId, role }, secret, { expiresIn: '7d' });
 };
 
-// Get user model based on role
-const getUserModel = (role) => {
-  switch (role) {
-    case 'student': return Student;
-    case 'coordinator': return Coordinator;
-    case 'admin': return Admin;
-    default: throw new Error('Invalid role');
-  }
-};
-
-// Check if user exists in any collection
-const checkUserExists = async (email) => {
-  const student = await Student.findOne({ email });
-  if (student) return { exists: true, role: 'student' };
-  
-  const coordinator = await Coordinator.findOne({ email });
-  if (coordinator) return { exists: true, role: 'coordinator' };
-  
-  const admin = await Admin.findOne({ email });
-  if (admin) return { exists: true, role: 'admin' };
-  
-  return { exists: false };
-};
-
-// Register new user
+// Register new user (only for students)
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, rollNo, role } = req.body;
+    const { name, email, password, rollNo } = req.body;
     
     // Debug logging
-    console.log('Registration request received:')
-    console.log('Name:', name)
-    console.log('Email:', email)
-    console.log('RollNo:', rollNo)
-    console.log('Role:', role)
-    console.log('Full request body:', req.body)
+    console.log('Registration request received:', { name, email, rollNo });
     
     // Validate required fields
-    if (!name || !email || !password || !role) {
-      console.log('Missing required fields')
+    if (!name || !email || !password || !rollNo) {
       return res.status(400).json({ 
-        message: 'All fields are required: name, email, password, role' 
-      });
-    }
-    if ((role === 'student' || role === 'coordinator') && !rollNo) {
-      console.log('Missing rollNo for student/coordinator')
-      return res.status(400).json({ 
-        message: 'Roll number is required for students and coordinators' 
+        message: 'All fields are required: name, email, password, rollNo' 
       });
     }
 
-    // Validate role
-    if (!['student', 'coordinator', 'admin'].includes(role)) {
-      console.log('Invalid role:', role)
-      return res.status(400).json({ 
-        message: 'Invalid role. Must be student, coordinator, or admin' 
-      });
-    }
-    
     // Check if user already exists
-    const userCheck = await checkUserExists(email);
-    if (userCheck.exists) {
-      console.log('User already exists as:', userCheck.role)
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { rollNo }] 
+    });
+    
+    if (existingUser) {
       return res.status(400).json({ 
-        message: `User with this email already exists as a ${userCheck.role}` 
+        message: 'User with this email or roll number already exists' 
       });
     }
 
-    // Check if roll number already exists (for student/coordinator only)
-    if (role === 'student' || role === 'coordinator') {
-      const existingStudent = await Student.findOne({ rollNo });
-      const existingCoordinator = await Coordinator.findOne({ rollNo });
-      if (existingStudent || existingCoordinator) {
-        console.log('Roll number already exists')
-        return res.status(400).json({ message: 'Roll number already exists' });
-      }
-    }
-
-    // Get user model
-    let userModel;
-    try {
-      userModel = getUserModel(role);
-      console.log('Selected user model for role:', role)
-    } catch (error) {
-      console.log('Error getting user model:', error.message)
-      return res.status(400).json({ message: 'Invalid role' });
-    }
-
-    // Prepare user data
+    // Create new student user
     const userData = {
       name,
       email,
-      passwordHash: password,
+      rollNo,
+      passwordHash: password, // Will be hashed by pre-save hook
+      role: 'student'
     };
-    if (role === 'student' || role === 'coordinator') {
-      userData.rollNo = rollNo;
-    }
 
-    // Coordinator clubKey validation
-    if (role === 'coordinator') {
-      const { clubKey, club } = req.body;
-      if (!clubKey || !club) {
-        return res.status(400).json({ message: 'Club and club pass key are required for coordinator signup' });
-      }
-      const Club = require('../models/Club');
-      const clubDoc = await Club.findOne({ name: club });
-      if (!clubDoc || clubDoc.clubKey !== clubKey) {
-        return res.status(400).json({ message: 'Invalid club pass key' });
-      }
-      userData.club = club;
-      userData.clubKey = clubKey;
-    }
-
-    // Create new user
-    console.log('Creating user with model:', userModel.modelName)
-    const user = new userModel(userData);
+    const user = new User(userData);
     await user.save();
-    console.log('User saved successfully with ID:', user._id)
 
     // Generate token
-    const token = generateToken(user._id, role);
-    console.log('Generated token with role:', role)
-
-    // Prepare response user object
-    const responseUser = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: role,
-    };
-    if (role === 'student' || role === 'coordinator') {
-      responseUser.rollNo = user.rollNo;
-    }
+    const token = generateToken(user._id, 'student');
 
     const responseData = {
-      message: `${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully`,
+      message: 'Student registered successfully',
       token,
-      user: responseUser,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        rollNo: user.rollNo,
+        role: 'student',
+        year: user.year,
+        branch: user.branch
+      }
     };
     
-    console.log('Sending response:', responseData)
+    console.log('Student registered successfully:', user._id);
     res.status(201).json(responseData);
   } catch (err) {
     console.error('Registration error:', err);
@@ -160,54 +73,29 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login user
+// Login user (for all roles)
 exports.login = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { rollNo, password } = req.body;
     
-    // Debug logging
-    console.log('Login request received:')
-    console.log('Email:', email)
-    console.log('Role:', role)
-    console.log('Full request body:', req.body)
-    
-    // Validate required fields
-    if (!email || !password || !role) {
-      console.log('Missing required fields for login')
-      return res.status(400).json({ 
-        message: 'All fields are required: email, password, role' 
-      });
+    if (!rollNo || !password) {
+      return res.status(400).json({ message: 'Roll number and password are required' });
     }
 
-    // Get user model
-    let userModel;
-    try {
-      userModel = getUserModel(role);
-      console.log('Selected user model for login role:', role)
-    } catch (error) {
-      console.log('Error getting user model for login:', error.message)
-      return res.status(400).json({ message: 'Invalid role' });
-    }
-
-    // Find user
-    const user = await userModel.findOne({ email });
+    // Find user by roll number
+    const user = await User.findOne({ rollNo });
     if (!user) {
-      console.log('User not found in model:', userModel.modelName)
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'Invalid roll number or password' });
     }
 
-    console.log('User found:', user.name, 'in model:', userModel.modelName)
-
-    // Check password
+    // Verify password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      console.log('Password mismatch')
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: 'Invalid roll number or password' });
     }
 
     // Generate token
-    const token = generateToken(user._id, role);
-    console.log('Generated login token with role:', role)
+    const token = generateToken(user._id, user.role);
 
     const responseData = {
       message: 'Login successful',
@@ -216,12 +104,14 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role,
         rollNo: user.rollNo,
-      },
+        role: user.role,
+        year: user.year,
+        branch: user.branch
+      }
     };
-    
-    console.log('Sending login response:', responseData)
+
+    console.log('Login successful for:', user.role, user._id);
     res.json(responseData);
   } catch (err) {
     console.error('Login error:', err);
@@ -232,41 +122,149 @@ exports.login = async (req, res) => {
 // Get user profile
 exports.getProfile = async (req, res) => {
   try {
-    const { userId, role } = req.user;
+    const { userId } = req.user;
     
-    // Debug logging
-    console.log('Get profile request:')
-    console.log('User ID:', userId)
-    console.log('Role from token:', role)
-    
-    // Get user model
-    let userModel;
-    try {
-      userModel = getUserModel(role);
-      console.log('Selected user model for profile:', userModel.modelName)
-    } catch (error) {
-      console.log('Error getting user model for profile:', error.message)
-      return res.status(400).json({ message: 'Invalid role in token' });
-    }
-
-    // Find user
-    const user = await userModel.findById(userId).select('-passwordHash');
+    const user = await User.findById(userId).select('-passwordHash');
     if (!user) {
-      console.log('User not found in profile lookup')
       return res.status(404).json({ message: 'User not found' });
     }
 
-    console.log('Profile user found:', user.name, 'Role:', role)
-
     const responseData = {
       ...user.toObject(),
-      role: role
+      role: user.role
     };
     
-    console.log('Sending profile response:', responseData)
     res.json(responseData);
   } catch (err) {
     console.error('Get profile error:', err);
     res.status(500).json({ message: 'Server error while fetching profile' });
+  }
+};
+
+// Admin creates a new coordinator
+exports.createCoordinator = async (req, res) => {
+  try {
+    const { name, rollNo, email, password, clubId } = req.body;
+    
+    if (!name || !rollNo || !email || !password || !clubId) {
+      return res.status(400).json({ 
+        message: 'All fields are required: name, rollNo, email, password, clubId' 
+      });
+    }
+
+    // Check if coordinator already exists
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { rollNo }] 
+    });
+    
+    if (existingUser) {
+      return res.status(400).json({ 
+        message: 'User with this email or roll number already exists' 
+      });
+    }
+
+    // Create coordinator user
+    const coordinatorData = {
+      name,
+      email,
+      rollNo,
+      passwordHash: password, // Will be hashed by pre-save hook
+      role: 'coordinator'
+    };
+
+    const coordinator = new User(coordinatorData);
+    await coordinator.save();
+
+    // Add coordinator to club
+    const Club = require('../models/Club');
+    await Club.findByIdAndUpdate(clubId, {
+      $push: { coordinators: coordinator._id }
+    });
+
+    res.status(201).json({ 
+      message: 'Coordinator created successfully', 
+      coordinator: {
+        id: coordinator._id,
+        name: coordinator.name,
+        rollNo: coordinator.rollNo,
+        email: coordinator.email,
+        role: 'coordinator'
+      }
+    });
+  } catch (err) {
+    console.error('Create coordinator error:', err);
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'Email or roll number already exists' });
+    }
+    res.status(500).json({ message: 'Server error during coordinator creation' });
+  }
+};
+
+// Change password (for coordinators and students)
+exports.changePassword = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ 
+        message: 'Current password and new password are required' 
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Update password
+    user.passwordHash = newPassword; // Will be hashed by pre-save hook
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ message: 'Server error while changing password' });
+  }
+};
+
+// Update user profile (for students to add year and branch later)
+exports.updateProfile = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { year, branch } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update fields if provided
+    if (year !== undefined) user.year = year;
+    if (branch !== undefined) user.branch = branch;
+
+    await user.save();
+
+    res.json({ 
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        rollNo: user.rollNo,
+        role: user.role,
+        year: user.year,
+        branch: user.branch
+      }
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ message: 'Server error while updating profile' });
   }
 }; 

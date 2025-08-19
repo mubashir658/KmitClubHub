@@ -214,9 +214,22 @@ const clubs = [
 
 async function seed() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/kmitclubhub';
+    await mongoose.connect(MONGODB_URI);
+
+    // Transform seed data to match Club schema
+    const clubsToInsert = clubs.map((c) => ({
+      name: c.name,
+      description: c.description || '',
+      logoUrl: '',
+      category: 'general',
+      coordinators: [],
+      gallery: [],
+      clubKey: c.clubKey || ''
+    }));
+
     await Club.deleteMany(); // Optional: clears old data
-    await Club.insertMany(clubs);
+    await Club.insertMany(clubsToInsert);
     console.log("✅ Club data seeded successfully.");
     process.exit(0);
   } catch (err) {

@@ -1,20 +1,52 @@
 const mongoose = require('mongoose');
 
-const teamHeadSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  rollNumber: { type: String, required: true },
-  designation: { type: String, required: true }
-}, { _id: false });
-
 const clubSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  logoUrl: { type: String, }, // URL or path to logo
-  description: { type: String, required: true },
-  instagramLink: { type: String },
-  teamHeads: [teamHeadSchema],
-  eventsConducted: [String],
-  upcomingEvents: [String],
-  clubKey: { type: String, required: true },
-}, { timestamps: true });
+  name: { 
+    type: String, 
+    required: true, 
+    unique: true 
+  },
+  description: { 
+    type: String, 
+    required: true 
+  },
+  logoUrl: { 
+    type: String 
+  },
+  category: { 
+    type: String, 
+    required: true 
+  },
+  coordinators: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User' 
+  }],
+  gallery: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Gallery' 
+  }],
+  clubKey: { 
+    type: String, 
+    required: true 
+  },
+  enrollmentOpen: { 
+    type: Boolean,
+    default: false
+  },
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  },
+  updatedAt: { 
+    type: Date, 
+    default: Date.now 
+  }
+});
+
+// Update the updatedAt field before saving
+clubSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
 module.exports = mongoose.model('Club', clubSchema);

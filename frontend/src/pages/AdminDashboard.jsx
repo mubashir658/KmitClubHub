@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Routes, Route, Link, useLocation } from "react-router-dom"
+import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import axios from "axios"
 import styles from "./Dashboard.module.css"
@@ -9,6 +9,7 @@ import styles from "./Dashboard.module.css"
 const AdminDashboard = () => {
   const { user } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("dashboard")
   const [clubs, setClubs] = useState([])
   const [users, setUsers] = useState([])
@@ -76,6 +77,19 @@ const AdminDashboard = () => {
           <h3>{pendingEvents.length}</h3>
           <p>Pending Events</p>
         </div>
+      </div>
+
+      <div className={styles.section}>
+        <h2>Coordinator Management</h2>
+        <button 
+          onClick={() => navigate("/admin/create-coordinator")} 
+          className={styles.approveBtn}
+        >
+          Add Coordinator
+        </button>
+        <p style={{ marginTop: "10px", color: "#666" }}>
+          Click the button above to create a new coordinator and assign them to a club.
+        </p>
       </div>
 
       <div className={styles.section}>

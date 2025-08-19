@@ -11,6 +11,7 @@ import ClubDetail from "./pages/ClubDetail"
 import StudentDashboard from "./pages/StudentDashboard"
 import CoordinatorDashboard from "./pages/CoordinatorDashboard"
 import AdminDashboard from "./pages/AdminDashboard"
+import CreateCoordinator from "./pages/CreateCoordinator"
 import ProtectedRoute from "./components/ProtectedRoute"
 import RoleSelect from "./pages/RoleSelect"
 
@@ -23,7 +24,6 @@ function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/role-select" element={<RoleSelect />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/images" element={<Images />} />
@@ -56,6 +56,16 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["admin"]}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Create Coordinator Route */}
+              <Route
+                path="/admin/create-coordinator"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <CreateCoordinator />
                   </ProtectedRoute>
                 }
               />

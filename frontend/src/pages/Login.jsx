@@ -18,22 +18,15 @@ const roleLabels = {
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    rollNo: "",
     password: "",
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const { login } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
-  const role = getRoleFromQuery(location.search)
-
-  useEffect(() => {
-    if (!role) {
-      navigate("/role-select", { replace: true })
-    }
-  }, [role, navigate])
 
   const handleChange = (e) => {
     setFormData({
@@ -42,27 +35,26 @@ const Login = () => {
     })
   }
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setLoading(true)
 
-    const result = await login(formData.email, formData.password, role)
+    console.log('Login attempt with:', { rollNo: formData.rollNo, password: formData.password })
+
+    const result = await login(formData.rollNo, formData.password)
 
     if (result.success) {
-      // Debug logging
-      console.log('Login successful:', result.user)
-      console.log('User role:', result.user.role)
-      console.log('Expected role from URL:', role)
-      
-      // Redirect based on user role or intended destination
-      const intendedPath = location.state?.from || getDashboardPath(result.user.role)
-      console.log('Redirecting to:', intendedPath)
+      const role = result.user.role
+      const intendedPath = getDashboardPath(role)
       navigate(intendedPath)
     } else {
       setError(result.message)
     }
-
     setLoading(false)
   }
 
@@ -79,65 +71,61 @@ const Login = () => {
     }
   }
 
-  if (!role) return null
-
   return (
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
         <div className={styles.authHeader}>
-          <h2>Login as {roleLabels[role] || "User"}</h2>
+          <h2>Login</h2>
           <p>Sign in to your KMIT Club Hub account</p>
         </div>
-
         {error && <div className={styles.error}>{error}</div>}
-
         <form onSubmit={handleSubmit} className={styles.authForm}>
           <div className={styles.formGroup}>
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="rollNo">Roll Number</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              id="rollNo"
+              name="rollNo"
+              value={formData.rollNo}
               onChange={handleChange}
               required
               className={styles.formControl}
-              placeholder="Enter your email"
+              placeholder="Enter your roll number"
             />
           </div>
-
           <div className={styles.formGroup}>
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className={styles.formControl}
-              placeholder="Enter your password"
-            />
+            <div className={styles.passwordContainer}>
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className={styles.formControl}
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                className={styles.togglePassword}
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
           </div>
-
           <button type="submit" className={styles.submitBtn} disabled={loading}>
             {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
-
         <div className={styles.authFooter}>
           <p>
             Don't have an account?
-            <Link to={`/signup?role=${role}`} className={styles.authLink}>
+            <Link to="/signup" className={styles.authLink}>
               Sign up here
             </Link>
           </p>
-          <button 
-            onClick={() => navigate("/role-select")} 
-            className={styles.backBtn}
-          >
-            ← Back to Role Selection
-          </button>
         </div>
       </div>
     </div>
