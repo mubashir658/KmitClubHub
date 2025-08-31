@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
 const eventSchema = new mongoose.Schema({
-  clubId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Club',
-    required: true
-  },
   title: {
     type: String,
     required: true,
@@ -13,37 +8,59 @@ const eventSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   date: {
     type: Date,
     required: true
   },
+  time: {
+    type: String,
+    required: true
+  },
   venue: {
     type: String,
+    required: true,
+    trim: true
+  },
+  imageUrl: {
+    type: String,
+    default: ''
+  },
+  club: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Club',
+    required: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true
   },
   status: {
     type: String,
-    enum: ['upcoming', 'ongoing', 'completed', 'cancelled'],
-    default: 'upcoming'
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
   },
-  registeredMembers: [{
+  registeredStudents: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
-  totalRegistrations: {
-    type: Number,
-    default: 0
-  },
-  averageRating: {
-    type: Number,
-    default: 0
-  },
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
+});
+
+// Update the updatedAt field before saving
+eventSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 module.exports = mongoose.model('Event', eventSchema);

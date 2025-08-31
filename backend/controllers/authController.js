@@ -58,7 +58,9 @@ exports.register = async (req, res) => {
         rollNo: user.rollNo,
         role: 'student',
         year: user.year,
-        branch: user.branch
+        branch: user.branch,
+        coordinatingClub: user.coordinatingClub,
+        joinedClubs: [] // New user has no clubs yet
       }
     };
     
@@ -94,6 +96,13 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid roll number or password' });
     }
 
+    // Populate clubs separately
+    let populatedClubs = [];
+    if (user.clubs && user.clubs.length > 0) {
+      const Club = require('../models/Club');
+      populatedClubs = await Club.find({ _id: { $in: user.clubs } });
+    }
+
     // Generate token
     const token = generateToken(user._id, user.role);
 
@@ -107,7 +116,9 @@ exports.login = async (req, res) => {
         rollNo: user.rollNo,
         role: user.role,
         year: user.year,
-        branch: user.branch
+        branch: user.branch,
+        coordinatingClub: user.coordinatingClub,
+        joinedClubs: populatedClubs // Use populated clubs
       }
     };
 
@@ -129,10 +140,35 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('Profile endpoint - User clubs (before populate):', user.clubs);
+    console.log('Profile endpoint - User clubs length (before populate):', user.clubs ? user.clubs.length : 0);
+
+    // Populate clubs separately to debug
+    let populatedClubs = [];
+    if (user.clubs && user.clubs.length > 0) {
+      const Club = require('../models/Club');
+      populatedClubs = await Club.find({ _id: { $in: user.clubs } });
+      console.log('Profile endpoint - Populated clubs:', populatedClubs);
+      console.log('Profile endpoint - Populated clubs length:', populatedClubs.length);
+    }
+
     const responseData = {
-      ...user.toObject(),
-      role: user.role
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      rollNo: user.rollNo,
+      role: user.role,
+      year: user.year,
+      branch: user.branch,
+      profilePhoto: user.profilePhoto,
+      coordinatingClub: user.coordinatingClub,
+      joinedClubs: populatedClubs, // Use populated clubs
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
     };
+
+    console.log('Profile endpoint - Response joinedClubs:', responseData.joinedClubs);
+    console.log('Profile endpoint - Response joinedClubs length:', responseData.joinedClubs ? responseData.joinedClubs.length : 0);
     
     res.json(responseData);
   } catch (err) {
@@ -169,7 +205,8 @@ exports.createCoordinator = async (req, res) => {
       email,
       rollNo,
       passwordHash: password, // Will be hashed by pre-save hook
-      role: 'coordinator'
+      role: 'coordinator',
+      coordinatingClub: clubId
     };
 
     const coordinator = new User(coordinatorData);
@@ -188,7 +225,9 @@ exports.createCoordinator = async (req, res) => {
         name: coordinator.name,
         rollNo: coordinator.rollNo,
         email: coordinator.email,
-        role: 'coordinator'
+        role: 'coordinator',
+        coordinatingClub: coordinator.coordinatingClub,
+        clubs: coordinator.clubs
       }
     });
   } catch (err) {
@@ -231,6 +270,62 @@ exports.changePassword = async (req, res) => {
   } catch (err) {
     console.error('Change password error:', err);
     res.status(500).json({ message: 'Server error while changing password' });
+  }
+};
+
+// Fix coordinator club assignment (admin only)
+exports.fixCoordinatorClubAssignment = async (req, res) => {
+  try {
+    const { coordinatorId, clubId } = req.body;
+    
+    if (!coordinatorId || !clubId) {
+      return res.status(400).json({ 
+        message: 'coordinatorId and clubId are required' 
+      });
+    }
+
+    // Find coordinator
+    const coordinator = await User.findById(coordinatorId);
+    if (!coordinator) {
+      return res.status(404).json({ message: 'Coordinator not found' });
+    }
+
+    if (coordinator.role !== 'coordinator') {
+      return res.status(400).json({ message: 'User is not a coordinator' });
+    }
+
+    // Find club
+    const Club = require('../models/Club');
+    const club = await Club.findById(clubId);
+    if (!club) {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+
+    // Update coordinator with coordinatingClub
+    await User.findByIdAndUpdate(coordinatorId, {
+      coordinatingClub: clubId
+    });
+
+    // Add coordinator to club's coordinators array
+    await Club.findByIdAndUpdate(clubId, {
+      $addToSet: { coordinators: coordinatorId }
+    });
+
+    res.json({ 
+      message: 'Coordinator club assignment fixed successfully',
+      coordinator: {
+        id: coordinator._id,
+        name: coordinator.name,
+        coordinatingClub: clubId
+      },
+      club: {
+        id: club._id,
+        name: club.name
+      }
+    });
+  } catch (err) {
+    console.error('Fix coordinator club assignment error:', err);
+    res.status(500).json({ message: 'Server error while fixing coordinator club assignment' });
   }
 };
 

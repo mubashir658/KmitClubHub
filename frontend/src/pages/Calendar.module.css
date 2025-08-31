@@ -207,6 +207,246 @@
   font-size: 0.9rem;
 }
 
+.eventTitle {
+  cursor: pointer;
+  color: #007bff;
+  transition: color 0.2s;
+}
+
+.eventTitle:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.clubName {
+  color: #666;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.eventTime {
+  color: #666;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.eventActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.registerBtn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.registerBtn:hover {
+  background: #218838;
+}
+
+.unregisterBtn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.unregisterBtn:hover {
+  background: #c82333;
+}
+
+.registrationCount {
+  font-size: 12px;
+  color: #666;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 0;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 16px;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.closeBtn:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.modalContent {
+  padding: 24px;
+}
+
+.eventImage {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.eventImage img {
+  max-width: 100%;
+  max-height: 250px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.placeholderImage {
+  width: 250px;
+  height: 180px;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  color: #adb5bd;
+  margin: 0 auto;
+}
+
+.eventInfo {
+  color: #333;
+}
+
+.eventDescription {
+  margin: 0 0 20px 0;
+  line-height: 1.6;
+  color: #555;
+}
+
+.eventMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.metaIcon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.registrationSection {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.registrationSection h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.registeredStatus, .notRegisteredStatus {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.registeredIcon, .notRegisteredIcon {
+  font-size: 20px;
+}
+
+.registeredIcon {
+  color: #28a745;
+}
+
+.notRegisteredIcon {
+  color: #ffc107;
+}
+
+.registrationCount {
+  text-align: center;
+  padding: 16px;
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  color: #1976d2;
+}
+
+.registrationCount h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .calendarPage {
     padding: 20px 0;
@@ -243,5 +483,29 @@
 
   .eventDate {
     margin-right: 0;
+  }
+
+  .modal {
+    margin: 20px;
+    max-height: calc(100vh - 40px);
+  }
+  
+  .modalHeader {
+    padding: 16px 20px 0;
+  }
+  
+  .modalContent {
+    padding: 20px;
+  }
+  
+  .eventActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .registerBtn, .unregisterBtn {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
   }
 } 

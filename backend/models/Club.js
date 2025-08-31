@@ -33,6 +33,14 @@ const clubSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  teamHeads: [{
+    name: String,
+    rollNumber: String,
+    designation: String
+  }],
+  eventsConducted: [String],
+  upcomingEvents: [String],
+  instagram: String,
   createdAt: { 
     type: Date, 
     default: Date.now 

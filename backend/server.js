@@ -24,6 +24,10 @@ console.log('MONGODB_URI:', MONGODB_URI);
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/clubs', require('./routes/clubRoutes'));
+app.use('/api/polls', require('./routes/pollRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/events', require('./routes/eventRoutes'));
+app.use('/api/feedback', require('./routes/feedbackRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

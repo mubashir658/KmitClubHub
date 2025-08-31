@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 // Authentication middleware
-exports.auth = (req, res, next) => {
+exports.auth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,7 +14,19 @@ exports.auth = (req, res, next) => {
   
   try {
     const decoded = jwt.verify(token, secret);
-    req.user = decoded; // { userId, role }
+    
+    // Fetch user data from database to get coordinatingClub
+    const user = await User.findById(decoded.userId).select('-passwordHash');
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    
+    req.user = {
+      id: user._id,
+      userId: user._id,
+      role: user.role,
+      coordinatingClub: user.coordinatingClub
+    };
     next();
   } catch (err) {
     console.error('JWT verification error:', err.message);
@@ -22,8 +35,10 @@ exports.auth = (req, res, next) => {
 }; 
 
 // Role-based middleware
-exports.requireRole = (role) => (req, res, next) => {
-  if (!req.user || req.user.role !== role) {
+exports.requireRole = (allowedRoles) => (req, res, next) => {
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  
+  if (!req.user || !roles.includes(req.user.role)) {
     return res.status(403).json({ message: 'Forbidden: Insufficient privileges' });
   }
   next();

@@ -35,7 +35,7 @@ const CreateCoordinator = () => {
 
   const fetchClubs = async () => {
     try {
-      const response = await axios.get("/api/clubs")
+      const response = await axios.get("http://localhost:5000/api/clubs")
       setClubs(response.data)
     } catch (error) {
       console.error("Error fetching clubs:", error)
@@ -60,7 +60,7 @@ const CreateCoordinator = () => {
     setMessage("")
 
     try {
-      const response = await axios.post("/api/auth/create-coordinator", formData, {
+      const response = await axios.post("http://localhost:5000/api/auth/create-coordinator", formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

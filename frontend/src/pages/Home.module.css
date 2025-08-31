@@ -199,6 +199,13 @@
   justify-items: center;
 }
 
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
 /* Remove/override previous carousel and large club card styles */
 .carouselSection, .carousel, .carouselImageWrapper, .carouselImage {
   display: none !important;

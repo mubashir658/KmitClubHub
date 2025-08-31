@@ -13,6 +13,25 @@ exports.getClubById = async (req, res) => {
   }
 };
 
+// Get all members of a club
+exports.getClubMembers = async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+    if (!club) {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+
+    // Find all users who are members of this club
+    const members = await User.find({ clubs: club._id })
+      .select('name email rollNo branch year')
+      .sort({ name: 1 });
+
+    res.json(members);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 // Get all club keys (admin only)
 exports.getAllClubKeys = async (req, res) => {
   try {
@@ -76,17 +95,92 @@ exports.enrollInClub = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // update year/branch if provided
+    // Check if user is already enrolled in this club
+    const alreadyMember = user.clubs.some((c) => String(c) === String(clubId));
+    if (alreadyMember) {
+      return res.status(400).json({ message: 'You are already enrolled in this club' });
+    }
+
+    // Update year/branch if provided
     if (year !== undefined) user.year = year;
     if (branch !== undefined) user.branch = branch;
 
-    // add club to user if not already
-    const alreadyMember = user.clubs.some((c) => String(c) === String(clubId));
-    if (!alreadyMember) user.clubs.push(clubId);
-
+    // Add club to user's clubs array
+    user.clubs.push(clubId);
     await user.save();
 
-    res.json({ message: 'Enrolled successfully', user: { id: user._id, year: user.year, branch: user.branch, clubs: user.clubs } });
+    // Fetch updated user with populated clubs
+    const updatedUser = await User.findById(userId).populate('clubs');
+
+    res.json({ 
+      message: 'Enrolled successfully', 
+      user: { 
+        id: updatedUser._id, 
+        year: updatedUser.year, 
+        branch: updatedUser.branch, 
+        joinedClubs: updatedUser.clubs 
+      } 
+    });
+  } catch (err) {
+    console.error('Enrollment error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Get pending membership requests for coordinator's club
+exports.getPendingMembershipRequests = async (req, res) => {
+  try {
+    const { userId, coordinatingClub } = req.user;
+    
+    if (!coordinatingClub) {
+      return res.status(400).json({ message: 'No club assigned to this coordinator' });
+    }
+
+    // Find all users who have this club in their clubs array (pending approval)
+    // This is a simplified approach - in a real system you'd have a separate MembershipRequest model
+    const pendingMembers = await User.find({ 
+      clubs: coordinatingClub,
+      role: 'student'
+    })
+      .select('name email rollNo branch year')
+      .sort({ createdAt: -1 });
+
+    res.json(pendingMembers);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Handle membership request (approve/reject)
+exports.handleMembershipRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { action } = req.body;
+    const { userId, coordinatingClub } = req.user;
+
+    if (!coordinatingClub) {
+      return res.status(400).json({ message: 'No club assigned to this coordinator' });
+    }
+
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ message: 'Invalid action. Use "approve" or "reject"' });
+    }
+
+    // Find the user making the request
+    const user = await User.findById(requestId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (action === 'approve') {
+      // User is already in the club (as per current simplified model)
+      res.json({ message: 'Membership request approved' });
+    } else {
+      // Remove user from club
+      user.clubs = user.clubs.filter(clubId => String(clubId) !== String(coordinatingClub));
+      await user.save();
+      res.json({ message: 'Membership request rejected' });
+    }
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

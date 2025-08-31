@@ -8,7 +8,7 @@ import styles from "./ClubDetail.module.css"
 
 const ClubDetail = () => {
   const { id } = useParams()
-  const { user, token } = useAuth()
+  const { user, token, updateUser } = useAuth()
   const navigate = useNavigate()
   const [club, setClub] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -24,7 +24,7 @@ const ClubDetail = () => {
 
   const fetchClub = async () => {
     try {
-      const response = await axios.get(`/api/clubs/${id}`)
+      const response = await axios.get(`http://localhost:5000/api/clubs/${id}`)
       setClub(response.data)
     } catch (error) {
       setError("Failed to load club details")
@@ -41,14 +41,27 @@ const ClubDetail = () => {
     e.preventDefault()
     setEnrollMsg("")
     try {
-      const res = await axios.post(`/api/clubs/${id}/enroll`, {
+      const res = await axios.post(`http://localhost:5000/api/clubs/${id}/enroll`, {
         year: enrollForm.year ? Number(enrollForm.year) : undefined,
         branch: enrollForm.branch || undefined
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
-      setEnrollMsg('Enrolled successfully')
-      // refresh user state optionally
+      setEnrollMsg('Enrolled successfully!')
+      setEnrollForm({ year: "", branch: "" })
+      setEnrollOpen(false)
+      
+      // Update the user context with the new clubs data
+      if (res.data.user) {
+        updateUser({
+          joinedClubs: res.data.user.joinedClubs,
+          year: res.data.user.year,
+          branch: res.data.user.branch
+        })
+      }
+      
+      // Refresh the page to show updated enrollment status
+      window.location.reload()
     } catch (err) {
       setEnrollMsg(err.response?.data?.message || 'Enrollment failed')
     }
@@ -59,6 +72,7 @@ const ClubDetail = () => {
 
   const isStudent = user && user.role === 'student'
   const enrollmentEnabled = club?.enrollmentOpen
+  const isAlreadyEnrolled = user && user.joinedClubs && user.joinedClubs.some(club => club._id === id)
 
   return (
     <div className={styles.clubDetail}>
@@ -82,45 +96,53 @@ const ClubDetail = () => {
           )}
           {isStudent && (
             <>
-              <p>Status: {enrollmentEnabled ? 'Open' : 'Closed'}</p>
-              <button
-                className={styles.enrollBtn}
-                disabled={!enrollmentEnabled}
-                onClick={() => setEnrollOpen(!enrollOpen)}
-              >
-                {enrollOpen ? 'Hide Form' : 'Enroll in Club'}
-              </button>
-              {enrollOpen && enrollmentEnabled && (
-                <form onSubmit={submitEnrollment} className={styles.enrollForm}>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label>Year</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="4"
-                        name="year"
-                        value={enrollForm.year}
-                        onChange={handleEnrollChange}
-                        className={styles.input}
-                        placeholder="Enter your year"
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Branch</label>
-                      <input
-                        type="text"
-                        name="branch"
-                        value={enrollForm.branch}
-                        onChange={handleEnrollChange}
-                        className={styles.input}
-                        placeholder="Enter your branch"
-                      />
-                    </div>
-                  </div>
-                  <button type="submit" className={styles.submitBtn}>Submit Enrollment</button>
-                  {enrollMsg && <div className={styles.note}>{enrollMsg}</div>}
-                </form>
+              {isAlreadyEnrolled ? (
+                <div className={styles.enrollmentStatus}>
+                  <p className={styles.success}>✅ You are already enrolled in this club!</p>
+                </div>
+              ) : (
+                <>
+                  <p>Status: {enrollmentEnabled ? 'Open' : 'Closed'}</p>
+                  <button
+                    className={styles.enrollBtn}
+                    disabled={!enrollmentEnabled}
+                    onClick={() => setEnrollOpen(!enrollOpen)}
+                  >
+                    {enrollOpen ? 'Hide Form' : 'Enroll in Club'}
+                  </button>
+                  {enrollOpen && enrollmentEnabled && (
+                    <form onSubmit={submitEnrollment} className={styles.enrollForm}>
+                      <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                          <label>Year</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="4"
+                            name="year"
+                            value={enrollForm.year}
+                            onChange={handleEnrollChange}
+                            className={styles.input}
+                            placeholder="Enter your year"
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Branch</label>
+                          <input
+                            type="text"
+                            name="branch"
+                            value={enrollForm.branch}
+                            onChange={handleEnrollChange}
+                            className={styles.input}
+                            placeholder="Enter your branch"
+                          />
+                        </div>
+                      </div>
+                      <button type="submit" className={styles.submitBtn}>Submit Enrollment</button>
+                      {enrollMsg && <div className={styles.note}>{enrollMsg}</div>}
+                    </form>
+                  )}
+                </>
               )}
             </>
           )}

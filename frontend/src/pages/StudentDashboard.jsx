@@ -6,20 +6,16 @@ import { useAuth } from "../context/AuthContext"
 import axios from "axios"
 import EventCard from "../components/EventCard"
 import styles from "./Dashboard.module.css"
+import StudentFeedback from "./StudentFeedback"
+import StudentPolls from "./StudentPolls"
 
 const StudentDashboard = () => {
   const { user } = useAuth()
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState("dashboard")
   const [clubs, setClubs] = useState([])
   const [events, setEvents] = useState([])
   const [myEvents, setMyEvents] = useState([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const path = location.pathname.split("/").pop()
-    setActiveTab(path === "student" ? "dashboard" : path)
-  }, [location])
 
   useEffect(() => {
     fetchData()
@@ -53,7 +49,11 @@ const StudentDashboard = () => {
     }
   }
 
-  const DashboardHome = () => (
+  if (loading) {
+    return <div className="loading">Loading dashboard...</div>
+  }
+
+  return (
     <div className={styles.dashboardHome}>
       <div className={styles.welcomeSection}>
         <h1>Welcome back, {user.name}!</h1>
@@ -73,6 +73,48 @@ const StudentDashboard = () => {
           <h3>{user.badges?.length || 0}</h3>
           <p>Badges Earned</p>
         </div>
+      </div>
+
+      <div className={styles.functionalityGrid}>
+        <Link to="/student/clubs" className={styles.functionCard}>
+          <div className={styles.cardContent}>
+            <h3>My Clubs</h3>
+            <p>View and manage your joined clubs</p>
+            <div className={styles.cardIcon}>🏢</div>
+          </div>
+        </Link>
+
+        <Link to="/student/calendar" className={styles.functionCard}>
+          <div className={styles.cardContent}>
+            <h3>Event Calendar</h3>
+            <p>Browse and register for events</p>
+            <div className={styles.cardIcon}>📅</div>
+          </div>
+        </Link>
+
+        <Link to="/student/feedback" className={styles.functionCard}>
+          <div className={styles.cardContent}>
+            <h3>Send Feedback</h3>
+            <p>Provide feedback to your clubs</p>
+            <div className={styles.cardIcon}>💬</div>
+          </div>
+        </Link>
+
+        <Link to="/student/polls" className={styles.functionCard}>
+          <div className={styles.cardContent}>
+            <h3>Vote in Polls</h3>
+            <p>Participate in club polls</p>
+            <div className={styles.cardIcon}>📊</div>
+          </div>
+        </Link>
+
+        <Link to="/student/profile" className={styles.functionCard}>
+          <div className={styles.cardContent}>
+            <h3>My Profile</h3>
+            <p>Update your profile and view badges</p>
+            <div className={styles.cardIcon}>👤</div>
+          </div>
+        </Link>
       </div>
 
       <div className={styles.section}>
@@ -107,186 +149,6 @@ const StudentDashboard = () => {
         ) : (
           <p>No upcoming events from your clubs.</p>
         )}
-      </div>
-    </div>
-  )
-
-  const MyClubs = () => (
-    <div className={styles.section}>
-      <h1>My Clubs</h1>
-      {user.joinedClubs && user.joinedClubs.length > 0 ? (
-        <div className={styles.clubsGrid}>
-          {user.joinedClubs.map((club) => (
-            <div key={club._id} className={styles.clubCard}>
-              <img src={club.logoUrl || "/placeholder.svg"} alt={club.name} />
-              <div className={styles.clubInfo}>
-                <h3>{club.name}</h3>
-                <p>{club.description}</p>
-                <Link to={`/clubs/${club._id}`} className={styles.viewBtn}>
-                  View Club
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={styles.emptyState}>
-          <p>You haven't joined any clubs yet.</p>
-          <Link to="/" className={styles.browseBtn}>
-            Browse Clubs
-          </Link>
-        </div>
-      )}
-    </div>
-  )
-
-  const Calendar = () => {
-    const [showMyEvents, setShowMyEvents] = useState(false)
-    const displayEvents = showMyEvents ? myEvents : events
-
-    return (
-      <div className={styles.section}>
-        <div className={styles.calendarHeader}>
-          <h1>Event Calendar</h1>
-          <div className={styles.toggleSwitch}>
-            <button className={!showMyEvents ? styles.active : ""} onClick={() => setShowMyEvents(false)}>
-              All Events
-            </button>
-            <button className={showMyEvents ? styles.active : ""} onClick={() => setShowMyEvents(true)}>
-              My Events
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.eventsGrid}>
-          {displayEvents.map((event) => (
-            <EventCard key={event._id} event={event} onRegister={handleEventRegister} />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  const Profile = () => {
-    const [profileData, setProfileData] = useState({
-      name: user.name || "",
-      profilePhoto: user.profilePhoto || "",
-    })
-
-    const handleProfileUpdate = async (e) => {
-      e.preventDefault()
-      try {
-        await axios.put("/api/users/profile", profileData)
-        alert("Profile updated successfully!")
-      } catch (error) {
-        alert("Failed to update profile")
-      }
-    }
-
-    return (
-      <div className={styles.section}>
-        <h1>My Profile</h1>
-        <div className={styles.profileContainer}>
-          <div className={styles.profileCard}>
-            <div className={styles.profileHeader}>
-              <div className={styles.profilePhoto}>
-                <img
-                  src={profileData.profilePhoto || "/placeholder.svg?height=100&width=100&query=profile"}
-                  alt="Profile"
-                />
-              </div>
-              <div className={styles.profileInfo}>
-                <h2>{user.name}</h2>
-                <p>{user.email}</p>
-                <p>
-                  {user.rollNo} - {user.branch} {user.section}
-                </p>
-                <p>Year {user.year}</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleProfileUpdate} className={styles.profileForm}>
-              <div className={styles.formGroup}>
-                <label>Name</label>
-                <input
-                  type="text"
-                  value={profileData.name}
-                  onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                  className={styles.formControl}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Profile Photo URL</label>
-                <input
-                  type="url"
-                  value={profileData.profilePhoto}
-                  onChange={(e) => setProfileData({ ...profileData, profilePhoto: e.target.value })}
-                  className={styles.formControl}
-                  placeholder="Enter image URL"
-                />
-              </div>
-
-              <button type="submit" className={styles.updateBtn}>
-                Update Profile
-              </button>
-            </form>
-          </div>
-
-          <div className={styles.badgesSection}>
-            <h3>My Badges</h3>
-            {user.badges && user.badges.length > 0 ? (
-              <div className={styles.badgesGrid}>
-                {user.badges.map((badge) => (
-                  <div key={badge._id} className={styles.badge}>
-                    <img src={badge.iconUrl || "/placeholder.svg"} alt={badge.name} />
-                    <p>{badge.name}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No badges earned yet. Participate in events to earn badges!</p>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return <div className="loading">Loading dashboard...</div>
-  }
-
-  return (
-    <div className={styles.dashboard}>
-      <div className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <h3>Student Dashboard</h3>
-        </div>
-        <nav className={styles.sidebarNav}>
-          <Link to="/student/dashboard" className={activeTab === "dashboard" ? styles.active : ""}>
-            Dashboard
-          </Link>
-          <Link to="/student/clubs" className={activeTab === "clubs" ? styles.active : ""}>
-            My Clubs
-          </Link>
-          <Link to="/student/calendar" className={activeTab === "calendar" ? styles.active : ""}>
-            Event Calendar
-          </Link>
-          <Link to="/student/profile" className={activeTab === "profile" ? styles.active : ""}>
-            Profile
-          </Link>
-        </nav>
-      </div>
-
-      <div className={styles.content}>
-        <Routes>
-          <Route path="dashboard" element={<DashboardHome />} />
-          <Route path="clubs" element={<MyClubs />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="" element={<DashboardHome />} />
-        </Routes>
       </div>
     </div>
   )

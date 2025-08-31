@@ -205,6 +205,87 @@
   transform: none;
 }
 
+.enrollmentStatus {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 1rem 0;
+}
+
+.success {
+  color: #27ae60;
+  font-weight: 600;
+  font-size: 1.1rem;
+  background: #d4edda;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+}
+
+.note {
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 5px;
+  border-left: 3px solid #6c757d;
+}
+
+.enrollForm {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.submitBtn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submitBtn:hover {
+  background: #5a6fd8;
+}
+
 @media (max-width: 768px) {
   .clubHeader {
     grid-template-columns: 1fr;
@@ -232,6 +313,10 @@
   }
 
   .membersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formRow {
     grid-template-columns: 1fr;
   }
 }

@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Club' 
   }],
+  coordinatingClub: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Club',
+    default: null
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 

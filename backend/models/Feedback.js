@@ -1,24 +1,42 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
-  clubId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Club',
-    required: true
-  },
-  userId: {
+  student: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+    required: false // Not required if feedback is from coordinator
+  },
+  coordinator: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false // Not required if feedback is from student
+  },
+  club: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Club',
+    required: false // Not required if feedback is to admin
+  },
+  subject: {
+    type: String,
     required: true
   },
   message: {
     type: String,
     required: true
   },
+  type: {
+    type: String,
+    enum: ['general', 'suggestion', 'complaint', 'appreciation', 'issue', 'request'],
+    default: 'general'
+  },
   status: {
     type: String,
-    enum: ['pending', 'reviewed', 'resolved'],
+    enum: ['pending', 'resolved', 'solved', 'escalated', 'forward_admin'],
     default: 'pending'
+  },
+  isToAdmin: {
+    type: Boolean,
+    default: false
   },
   responseMessage: {
     type: String,

@@ -3,18 +3,21 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/../.env' });
 
 const seedAdmin = async () => {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/kmitclubhub',
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }
-    );
-    console.log('✅ Connected to MongoDB');
+    // Connect to MongoDB Atlas using env variable
+    const mongoURI = process.env.MONGODB_URI;
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI not found in .env');
+    }
+
+    await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ Connected to MongoDB Atlas');
 
     // Check if admin already exists
     const existingAdmin = await User.findOne({ role: 'admin' });

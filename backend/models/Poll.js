@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
 
 const pollSchema = new mongoose.Schema({
+  scope: {
+    type: String,
+    enum: ['club', 'coordinators', 'all'],
+    default: 'club'
+  },
   clubId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Club',
-    required: true
+    required: function() { return this.scope === 'club'; }
   },
   question: {
     type: String,

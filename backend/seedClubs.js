@@ -218,15 +218,37 @@ async function seed() {
     await mongoose.connect(MONGODB_URI);
 
     // Transform seed data to match Club schema
-    const clubsToInsert = clubs.map((c) => ({
-      name: c.name,
-      description: c.description || '',
-      logoUrl: '',
-      category: 'general',
-      coordinators: [],
-      gallery: [],
-      clubKey: c.clubKey || ''
-    }));
+    const clubsToInsert = clubs.map((c) => {
+      // Map club names to their logo files
+      const logoMap = {
+        "Organizing Committee": "/assets/club logos/OC-Logo.jpg",
+        "Public Relations": "/assets/club logos/PR-Logo.jpg",
+        "Aakarshan - The Art Club": "/assets/club logos/Aakarshan-logo.jpg",
+        "Aalap - The Music Club": "/assets/club logos/Aalap-Logo.jpg",
+        "Abhinaya - The Drama Club": "/assets/club logos/AbhinayaLogo.jpg",
+        "Kaivalya - The Yoga Club": "/assets/club logos/Kaivalya-Logo.jpeg",
+        "Kmitra": "/assets/club logos/Kmitra-Logo.jpg",
+        "Kreeda - The Sports Club": "/assets/club logos/Kreeda-Logo.jpg",
+        "Mudra - The Dance Club": "/assets/club logos/Mudra-Logo.jpg",
+        "Recurse - The Technical Club": "/assets/club logos/Recurse-Logo.jpg",
+        "Traces of Lenses - The Photography Club": "/assets/club logos/TOL-Logo.png",
+        "Vachan - The Speakers' Club": "/assets/club logos/Vachan-Logo.jpg"
+      };
+
+      return {
+        name: c.name,
+        description: c.description || '',
+        logoUrl: logoMap[c.name] || '',
+        category: 'general',
+        coordinators: [],
+        gallery: [],
+        clubKey: c.clubKey || '',
+        teamHeads: c.teamHeads || [],
+        eventsConducted: c.eventsConducted || [],
+        upcomingEvents: c.upcomingEvents || [],
+        instagram: c.instagram || ''
+      };
+    });
 
     await Club.deleteMany(); // Optional: clears old data
     await Club.insertMany(clubsToInsert);
