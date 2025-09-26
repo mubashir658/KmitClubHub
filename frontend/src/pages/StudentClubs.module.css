@@ -1,0 +1,460 @@
+.clubsContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.header h1 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+}
+
+.header p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 1px solid #f5c6cb;
+  text-align: center;
+}
+
+.section {
+  margin-bottom: 3rem;
+}
+
+.section h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+}
+
+.section p {
+  color: #7f8c8d;
+  margin-bottom: 2rem;
+}
+
+.clubsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.clubCard {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.clubCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.clubCard.joined {
+  border-color: #27ae60;
+  background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
+}
+
+.clubHeader {
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.clubLogo {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.clubLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.clubInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.clubInfo h3 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.clubInfo p {
+  color: #7f8c8d;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.clubStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.category {
+  background: #3498db;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.members {
+  background: #95a5a6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.enrollmentClosed {
+  background: #e74c3c;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.clubActions {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #ecf0f1;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.viewBtn {
+  flex: 1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.viewBtn:hover {
+  transform: translateY(-2px);
+}
+
+.joinBtn {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.joinBtn:hover {
+  transform: translateY(-2px);
+}
+
+.leaveBtn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.leaveBtn:hover {
+  transform: translateY(-2px);
+}
+
+.joinedBadge {
+  background: #27ae60;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.closedBadge {
+  background: #95a5a6;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.emptyState h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.emptyState p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .clubsContainer {
+    padding: 1rem;
+  }
+  
+  .clubsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .clubHeader {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .clubLogo {
+    align-self: center;
+  }
+  
+  .clubActions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .section h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .clubHeader {
+    padding: 1rem;
+  }
+  
+  .clubActions {
+    padding: 1rem;
+  }
+  
+  .emptyState {
+    padding: 2rem 1rem;
+  }
+  
+  .emptyIcon {
+    font-size: 3rem;
+  }
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.3rem;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #95a5a6;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.closeButton:hover {
+  background-color: #f8f9fa;
+  color: #e74c3c;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+.modalBody p {
+  color: #7f8c8d;
+  margin-bottom: 1.5rem;
+}
+
+.modalBody strong {
+  color: #2c3e50;
+}
+
+.reasonTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.3s ease;
+}
+
+.reasonTextarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  border-top: 1px solid #ecf0f1;
+}
+
+.cancelButton {
+  background: #95a5a6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: #7f8c8d;
+}
+
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submitButton {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Modal responsive */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .modalFooter {
+    flex-direction: column;
+  }
+}

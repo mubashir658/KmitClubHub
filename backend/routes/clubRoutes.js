@@ -12,11 +12,16 @@ router.get('/', (req, res) => {
     .catch(err => res.status(500).json({ message: 'Error fetching clubs', error: err.message }));
 });
 
-// GET /api/clubs/:id
-router.get('/:id', clubController.getClubById);
+// Coordinator leave request management (must come before /:id routes)
+router.get('/leave-requests/pending', auth, requireRole(['coordinator']), (req, res, next) => {
+  console.log('Leave requests pending route hit');
+  next();
+}, clubController.getPendingLeaveRequests);
 
-// GET /api/clubs/:id/members - Get all members of a club
-router.get('/:id/members', clubController.getClubMembers);
+router.put('/leave-requests/:requestId', auth, requireRole(['coordinator']), (req, res, next) => {
+  console.log('Leave request handle route hit');
+  next();
+}, clubController.handleLeaveRequest);
 
 // GET /api/clubs/requests/pending - Get pending membership requests for coordinator's club
 router.get('/requests/pending', auth, requireRole(['coordinator']), clubController.getPendingMembershipRequests);
@@ -24,9 +29,22 @@ router.get('/requests/pending', auth, requireRole(['coordinator']), clubControll
 // PUT /api/clubs/requests/:requestId - Approve/reject membership request
 router.put('/requests/:requestId', auth, requireRole(['coordinator']), clubController.handleMembershipRequest);
 
+// GET /api/clubs/:id
+router.get('/:id', clubController.getClubById);
+
+// GET /api/clubs/:id/members - Get all members of a club
+router.get('/:id/members', clubController.getClubMembers);
+
 // Enrollment controls
 router.post('/:clubId/toggle-enrollment', auth, clubController.toggleEnrollment);
 router.post('/:clubId/enroll', auth, clubController.enrollInClub);
+
+// Student club joining/leaving
+router.post('/:clubId/join', auth, clubController.joinClub);
+router.post('/:clubId/request-leave', auth, (req, res, next) => {
+  console.log('Request leave route hit for club:', req.params.clubId);
+  next();
+}, clubController.requestLeaveClub);
 
 // Admin routes for club keys
 router.get('/admin/club-keys', auth, requireRole('admin'), clubController.getAllClubKeys);

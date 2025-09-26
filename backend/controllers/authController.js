@@ -160,6 +160,7 @@ exports.getProfile = async (req, res) => {
       role: user.role,
       year: user.year,
       branch: user.branch,
+      section: user.section,
       profilePhoto: user.profilePhoto,
       coordinatingClub: user.coordinatingClub,
       joinedClubs: populatedClubs, // Use populated clubs
@@ -333,7 +334,7 @@ exports.fixCoordinatorClubAssignment = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { userId } = req.user;
-    const { year, branch } = req.body;
+    const { year, branch, section } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -343,6 +344,7 @@ exports.updateProfile = async (req, res) => {
     // Update fields if provided
     if (year !== undefined) user.year = year;
     if (branch !== undefined) user.branch = branch;
+    if (section !== undefined) user.section = section;
 
     await user.save();
 
@@ -355,7 +357,8 @@ exports.updateProfile = async (req, res) => {
         rollNo: user.rollNo,
         role: user.role,
         year: user.year,
-        branch: user.branch
+        branch: user.branch,
+        section: user.section
       }
     });
   } catch (err) {

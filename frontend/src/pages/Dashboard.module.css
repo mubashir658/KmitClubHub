@@ -1584,3 +1584,106 @@
   font-size: 1rem;
   font-weight: 600;
 }
+
+/* Leave Request Styles */
+.leaveRequestsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.leaveRequestCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #f39c12;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.leaveRequestCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.requestInfo h4 {
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.requestInfo p {
+  color: #7f8c8d;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.reason {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border-left: 3px solid #f39c12;
+}
+
+.reason strong {
+  color: #2c3e50;
+}
+
+.requestDate {
+  color: #95a5a6 !important;
+  font-size: 0.8rem !important;
+  font-style: italic;
+}
+
+.requestActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end;
+}
+
+.approveBtn {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.approveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+.rejectBtn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rejectBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Mobile responsive for leave requests */
+@media (max-width: 768px) {
+  .leaveRequestsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .requestActions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

@@ -9,6 +9,8 @@ import Images from "./pages/Images"
 import Calendar from "./pages/Calendar"
 import ClubDetail from "./pages/ClubDetail"
 import StudentDashboard from "./pages/StudentDashboard"
+import StudentProfile from "./pages/StudentProfile"
+import StudentClubs from "./pages/StudentClubs"
 import CoordinatorDashboard from "./pages/CoordinatorDashboard"
 import CoordinatorMembers from "./pages/CoordinatorMembers"
 import AdminDashboard from "./pages/AdminDashboard"
@@ -48,11 +50,11 @@ function App() {
                     <Routes>
                       <Route path="dashboard" element={<StudentDashboard />} />
                       <Route path="" element={<StudentDashboard />} />
-                      <Route path="clubs" element={<StudentDashboard />} />
+                      <Route path="clubs" element={<StudentClubs />} />
                       <Route path="calendar" element={<StudentDashboard />} />
                       <Route path="feedback" element={<StudentFeedback />} />
                       <Route path="polls" element={<StudentPolls />} />
-                      <Route path="profile" element={<StudentDashboard />} />
+                      <Route path="profile" element={<StudentProfile />} />
                     </Routes>
                   </ProtectedRoute>
                 }

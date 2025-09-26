@@ -16,8 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB connection with default URI
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/kmitclubhub';
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 console.log('MONGODB_URI:', MONGODB_URI);
 
@@ -48,7 +48,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 API available at http://localhost:${PORT}/api`);

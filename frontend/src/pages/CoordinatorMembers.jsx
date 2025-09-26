@@ -9,6 +9,7 @@ const CoordinatorMembers = () => {
   const { user } = useAuth()
   const [club, setClub] = useState(null)
   const [members, setMembers] = useState([])
+  const [leaveRequests, setLeaveRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState(null)
@@ -62,6 +63,18 @@ const CoordinatorMembers = () => {
       const membersResponse = await axios.get(`http://localhost:5000/api/clubs/${coordinatorClub._id}/members`)
       setMembers(membersResponse.data)
       
+      // Try to get leave requests (optional - don't fail if this doesn't work)
+      try {
+        console.log("Fetching leave requests...")
+        const leaveRequestsResponse = await axios.get(`http://localhost:5000/api/clubs/leave-requests/pending`)
+        console.log("Leave requests response:", leaveRequestsResponse.data)
+        setLeaveRequests(leaveRequestsResponse.data)
+      } catch (leaveError) {
+        console.warn('Could not fetch leave requests:', leaveError)
+        console.warn('Leave error response:', leaveError.response?.data)
+        setLeaveRequests([]) // Set empty array if leave requests fail
+      }
+      
     } catch (error) {
       console.error('Error fetching club data:', error)
       setError('Failed to load club data. Please try again.')
@@ -85,6 +98,21 @@ const CoordinatorMembers = () => {
       alert(error.response?.data?.message || 'Failed to update enrollment status')
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleLeaveRequest = async (requestId, action) => {
+    if (!window.confirm(`Are you sure you want to ${action} this leave request?`)) {
+      return
+    }
+
+    try {
+      await axios.put(`http://localhost:5000/api/clubs/leave-requests/${requestId}`, { action })
+      alert(`Leave request ${action}d successfully!`)
+      fetchClubData() // Refresh data
+    } catch (error) {
+      console.error('Leave request handling error:', error)
+      alert(error.response?.data?.message || `Failed to ${action} leave request`)
     }
   }
 
@@ -174,6 +202,47 @@ const CoordinatorMembers = () => {
           </div>
         </div>
       </div>
+
+      {/* Pending Leave Requests */}
+      {leaveRequests.length > 0 && (
+        <div className={styles.section}>
+          <h2>Pending Leave Requests ({leaveRequests.length})</h2>
+          <div className={styles.leaveRequestsGrid}>
+            {leaveRequests.map((request) => (
+              <div key={request._id} className={styles.leaveRequestCard}>
+                <div className={styles.requestInfo}>
+                  <h4>{request.student.name}</h4>
+                  <p>Roll No: {request.student.rollNo}</p>
+                  <p>Branch: {request.student.branch}</p>
+                  <p>Year: {request.student.year}</p>
+                  {request.reason && (
+                    <div className={styles.reason}>
+                      <strong>Reason:</strong> {request.reason}
+                    </div>
+                  )}
+                  <p className={styles.requestDate}>
+                    Requested: {new Date(request.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className={styles.requestActions}>
+                  <button
+                    onClick={() => handleLeaveRequest(request._id, 'approve')}
+                    className={styles.approveBtn}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleLeaveRequest(request._id, 'reject')}
+                    className={styles.rejectBtn}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Members List */}
       <div className={styles.section}>
