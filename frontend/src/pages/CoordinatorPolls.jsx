@@ -12,6 +12,7 @@ const CoordinatorPolls = () => {
   const [loading, setLoading] = useState(true)
   const [club, setClub] = useState(null)
   const [error, setError] = useState(null)
+  const [deleting, setDeleting] = useState(null)
 
   const fetchClubData = async () => {
     try {
@@ -76,6 +77,21 @@ const CoordinatorPolls = () => {
     }
   }
 
+  const deletePoll = async (pollId) => {
+    if (!window.confirm('Delete this poll?')) return
+    setDeleting(pollId)
+    try {
+      await axios.delete(`http://localhost:5000/api/polls/${pollId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      await load()
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to delete poll')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
   useEffect(() => {
     fetchClubData()
   }, [])
@@ -117,20 +133,7 @@ const CoordinatorPolls = () => {
     }
   }
 
-  const vote = async (pollId, optionId) => {
-    try {
-      await axios.post(
-        `http://localhost:5000/api/polls/${pollId}/vote`,
-        { optionId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      )
-      alert("Vote submitted successfully!")
-      // Refresh polls to show updated results
-      await load()
-    } catch (e) {
-      alert(e.response?.data?.message || "Failed to submit vote")
-    }
-  }
+  // Coordinators should view results only; no voting from coordinator dashboard
 
   const getTotalVotes = (poll) => {
     return poll.options?.reduce((total, option) => total + (option.votes || 0), 0) || 0
@@ -243,8 +246,9 @@ const CoordinatorPolls = () => {
                     {poll.clubId && <span> - {poll.clubId.name}</span>}
                   </p>
                   
-                  <div style={{ marginBottom: '15px' }}>
+                  <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong>Total Votes: {totalVotes}</strong>
+                    <button onClick={() => deletePoll(poll._id)} disabled={deleting===poll._id} style={{ background: '#dc3545', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 4, cursor: 'pointer' }}>{deleting===poll._id ? 'Deleting...' : 'Delete Poll'}</button>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -260,20 +264,7 @@ const CoordinatorPolls = () => {
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <span style={{ fontWeight: '500', fontSize: '14px' }}>{option.text}</span>
-                            <button
-                              onClick={() => vote(poll._id, option._id)}
-                              style={{
-                                backgroundColor: '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                padding: '6px 12px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '12px'
-                              }}
-                            >
-                              Vote
-                            </button>
+                            <span style={{ color: '#666', fontSize: '12px' }}>Results</span>
                           </div>
                           
                           <div style={{ marginBottom: '8px' }}>

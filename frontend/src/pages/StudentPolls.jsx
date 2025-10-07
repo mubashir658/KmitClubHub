@@ -1,11 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
 import axios from "axios"
 import styles from "./Dashboard.module.css"
 
 const StudentPolls = () => {
   const [polls, setPolls] = useState([])
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,6 +38,11 @@ const StudentPolls = () => {
     } catch (e) {
       alert(e.response?.data?.message || "Failed to submit vote")
     }
+  }
+
+  const hasVoted = (poll) => {
+    if (!user) return false
+    return Array.isArray(poll.votes) && poll.votes.some(v => v.userId === user.id || v.userId === user._id)
   }
 
   const getTotalVotes = (poll) => {
@@ -91,17 +98,18 @@ const StudentPolls = () => {
                           <span style={{ fontWeight: '500', fontSize: '14px' }}>{option.text}</span>
                           <button
                             onClick={() => vote(poll._id, option._id)}
+                            disabled={hasVoted(poll)}
                             style={{
-                              backgroundColor: '#007bff',
+                              backgroundColor: hasVoted(poll) ? '#adb5bd' : '#007bff',
                               color: 'white',
                               border: 'none',
                               padding: '6px 12px',
                               borderRadius: '4px',
-                              cursor: 'pointer',
+                              cursor: hasVoted(poll) ? 'not-allowed' : 'pointer',
                               fontSize: '12px'
                             }}
                           >
-                            Vote
+                            {hasVoted(poll) ? 'Voted' : 'Vote'}
                           </button>
                         </div>
                         

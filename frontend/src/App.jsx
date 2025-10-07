@@ -51,7 +51,7 @@ function App() {
                       <Route path="dashboard" element={<StudentDashboard />} />
                       <Route path="" element={<StudentDashboard />} />
                       <Route path="clubs" element={<StudentClubs />} />
-                      <Route path="calendar" element={<StudentDashboard />} />
+                      <Route path="calendar" element={<Calendar />} />
                       <Route path="feedback" element={<StudentFeedback />} />
                       <Route path="polls" element={<StudentPolls />} />
                       <Route path="profile" element={<StudentProfile />} />
@@ -72,6 +72,7 @@ function App() {
                       <Route path="events" element={<CoordinatorEvents />} />
                       <Route path="feedback" element={<CoordinatorFeedback />} />
                       <Route path="polls" element={<CoordinatorPolls />} />
+                      <Route path="my-club" element={<CoordinatorMembers />} />
                     </Routes>
                   </ProtectedRoute>
                 }

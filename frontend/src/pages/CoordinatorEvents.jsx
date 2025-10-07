@@ -87,6 +87,19 @@ const CoordinatorEvents = () => {
     }
   }
 
+  const handleDeactivate = async (eventId) => {
+    if (!window.confirm("Deactivate this approved event?")) return
+    try {
+      await axios.put(`/api/events/${eventId}/deactivate`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      alert("Event deactivated")
+      fetchEvents()
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to deactivate event")
+    }
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return '#ffc107'
@@ -260,7 +273,10 @@ const CoordinatorEvents = () => {
                     </>
                   )}
                   {event.status === "approved" && (
-                    <span className={styles.approvedNote}>✅ Event approved and live!</span>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <span className={styles.approvedNote}>✅ Event approved and live!</span>
+                      <button onClick={() => handleDeactivate(event._id)} className={styles.deleteBtn}>Deactivate</button>
+                    </div>
                   )}
                   {event.status === "rejected" && (
                     <span className={styles.rejectedNote}>❌ Event was rejected</span>

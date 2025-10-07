@@ -25,7 +25,8 @@ exports.auth = async (req, res, next) => {
       id: user._id,
       userId: user._id,
       role: user.role,
-      coordinatingClub: user.coordinatingClub
+      coordinatingClub: user.coordinatingClub,
+      clubs: user.clubs || []
     };
     next();
   } catch (err) {

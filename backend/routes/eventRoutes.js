@@ -113,6 +113,26 @@ router.put('/:id/approve', auth, requireRole(['admin']), async (req, res) => {
   }
 });
 
+// Coordinator deactivates an approved event (sets status to rejected)
+router.put('/:id/deactivate', auth, requireRole(['coordinator']), async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (String(event.club) !== String(req.user.coordinatingClub)) {
+      return res.status(403).json({ message: 'Not authorized to deactivate this event' });
+    }
+    if (event.status !== 'approved') {
+      return res.status(400).json({ message: 'Only approved events can be deactivated' });
+    }
+    event.status = 'rejected';
+    await event.save();
+    res.json({ message: 'Event deactivated', event });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get coordinator's club events
 router.get('/coordinator/my-events', auth, requireRole(['coordinator']), async (req, res) => {
   try {

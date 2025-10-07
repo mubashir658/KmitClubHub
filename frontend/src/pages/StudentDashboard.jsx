@@ -15,6 +15,7 @@ const StudentDashboard = () => {
   const [clubs, setClubs] = useState([])
   const [events, setEvents] = useState([])
   const [myEvents, setMyEvents] = useState([])
+  const [hasNewEvent, setHasNewEvent] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -32,6 +33,16 @@ const StudentDashboard = () => {
       const userClubIds = user.joinedClubs?.map((club) => club._id) || []
       const userEvents = eventsRes.data.filter((event) => userClubIds.includes(event.club._id))
       setMyEvents(userEvents)
+
+      // New event indicator: check if any event is within last 48 hours or future new
+      const now = new Date()
+      const recentThreshold = new Date(now.getTime() - 48 * 60 * 60 * 1000)
+      const hasRecentOrNewUpcoming = eventsRes.data.some(ev => {
+        const createdAt = ev.createdAt ? new Date(ev.createdAt) : null
+        const eventDate = new Date(ev.date)
+        return (createdAt && createdAt >= recentThreshold) || (eventDate > now && createdAt && createdAt >= recentThreshold)
+      })
+      setHasNewEvent(hasRecentOrNewUpcoming)
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
@@ -88,7 +99,10 @@ const StudentDashboard = () => {
           <div className={styles.cardContent}>
             <h3>Event Calendar</h3>
             <p>Browse and register for events</p>
-            <div className={styles.cardIcon}>📅</div>
+            <div className={styles.cardIcon}>
+              📅
+              {hasNewEvent && <span style={{ marginLeft: '8px', display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#28a745', borderRadius: '50%' }}></span>}
+            </div>
           </div>
         </Link>
 

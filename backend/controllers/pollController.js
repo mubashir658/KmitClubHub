@@ -67,7 +67,8 @@ exports.getActivePollsForUser = async (req, res) => {
     let filter = { status: 'active' };
     if (role === 'student') {
       // Show all-club polls and specific club polls for any club the student is in
-      const userClubIds = req.user.joinedClubs ? req.user.joinedClubs.map(club => club._id) : [];
+      const clubsField = req.user.joinedClubs || req.user.clubs || [];
+      const userClubIds = clubsField.map(c => (c && c._id) ? c._id : c);
       filter.$or = [
         { scope: 'all' },
         { scope: 'club', clubId: { $in: userClubIds } },
@@ -136,6 +137,28 @@ exports.adminList = async (req, res) => {
   try {
     const polls = await Poll.find().populate('clubId', 'name');
     res.json(polls);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Delete poll (coordinator can delete their club polls; admin can delete any)
+exports.deletePoll = async (req, res) => {
+  try {
+    const pollId = req.params.pollId;
+    const poll = await Poll.findById(pollId);
+    if (!poll) return res.status(404).json({ message: 'Poll not found' });
+
+    const isAdmin = req.user.role === 'admin';
+    const isCoordinator = req.user.role === 'coordinator' && String(poll.clubId) === String(req.user.coordinatingClub);
+    const isCreator = String(poll.createdBy) === String(req.user.userId);
+
+    if (!(isAdmin || isCoordinator || isCreator)) {
+      return res.status(403).json({ message: 'Not authorized to delete this poll' });
+    }
+
+    await Poll.findByIdAndDelete(pollId);
+    res.json({ message: 'Poll deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
