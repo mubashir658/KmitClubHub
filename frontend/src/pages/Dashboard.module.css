@@ -604,7 +604,7 @@
 
 .tableHeader {
   display: grid;
-  grid-template-columns: 1fr 1fr 100px 1fr 120px;
+  grid-template-columns: 1.5fr 1.5fr 100px 100px 1.5fr 120px;
   gap: 1rem;
   padding: 1rem;
   background: #667eea;
@@ -614,7 +614,7 @@
 
 .tableRow {
   display: grid;
-  grid-template-columns: 1fr 1fr 100px 1fr 120px;
+  grid-template-columns: 1.5fr 1.5fr 100px 100px 1.5fr 120px;
   gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid #ddd;

@@ -15,6 +15,7 @@ import CoordinatorDashboard from "./pages/CoordinatorDashboard"
 import CoordinatorMembers from "./pages/CoordinatorMembers"
 import AdminDashboard from "./pages/AdminDashboard"
 import AdminClubs from "./pages/AdminClubs"
+import AdminUsers from "./pages/AdminUsers"
 import CreateCoordinator from "./pages/CreateCoordinator"
 import ProtectedRoute from "./components/ProtectedRoute"
 import RoleSelect from "./pages/RoleSelect"
@@ -89,7 +90,7 @@ function App() {
                       <Route path="create-coordinator" element={<CreateCoordinator />} />
                       <Route path="clubs" element={<AdminClubs />} />
                       <Route path="events" element={<AdminEvents />} />
-                      <Route path="users" element={<AdminDashboard />} />
+                      <Route path="users" element={<AdminUsers />} />
                       <Route path="feedback" element={<AdminFeedback />} />
                       <Route path="polls" element={<AdminPolls />} />
                       <Route path="analytics" element={<AdminDashboard />} />
