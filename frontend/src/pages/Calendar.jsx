@@ -1,4 +1,3 @@
-"use client"
 
 import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
@@ -60,6 +59,9 @@ const Calendar = () => {
   const openEventModal = async (event) => {
     try {
       const response = await axios.get(`/api/events/${event._id}`)
+      console.log('Event data received:', response.data)
+      console.log('ImageUrl length:', response.data.imageUrl?.length)
+      console.log('ImageUrl preview:', response.data.imageUrl?.substring(0, 100) + '...')
       setSelectedEvent(response.data)
       setShowEventModal(true)
     } catch (error) {
@@ -264,10 +266,22 @@ const Calendar = () => {
               <div className={styles.modalContent}>
                 <div className={styles.eventImage}>
                   {selectedEvent.imageUrl ? (
-                    <img src={selectedEvent.imageUrl} alt={selectedEvent.title} />
-                  ) : (
-                    <div className={styles.placeholderImage}>📅</div>
-                  )}
+                    <img 
+                      src={selectedEvent.imageUrl} 
+                      alt={selectedEvent.title}
+                      onError={(e) => {
+                        console.error('Image failed to load:', selectedEvent.imageUrl?.substring(0, 100) + '...');
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={styles.placeholderImage}
+                    style={{ display: selectedEvent.imageUrl ? 'none' : 'flex' }}
+                  >
+                    📅
+                  </div>
                 </div>
                 
                 <div className={styles.eventInfo}>
