@@ -67,7 +67,7 @@ exports.getActivePollsForUser = async (req, res) => {
     let filter = { status: 'active' };
     if (role === 'student') {
       // Show all-club polls and specific club polls for any club the student is in
-      const userClubIds = req.user.joinedClubs ? req.user.joinedClubs.map(club => club._id) : [];
+      const userClubIds = req.user.clubs ? req.user.clubs.map(club => club._id) : [];
       filter.$or = [
         { scope: 'all' },
         { scope: 'club', clubId: { $in: userClubIds } },
