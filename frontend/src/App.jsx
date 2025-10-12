@@ -27,6 +27,7 @@ import CoordinatorPolls from "./pages/CoordinatorPolls"
 import AdminPolls from "./pages/AdminPolls"
 import CoordinatorEvents from "./pages/CoordinatorEvents"
 import AdminEvents from "./pages/AdminEvents"
+import CoordinatorProfile from "./components/CoordinatorProfile"
 
 function App() {
   return (
@@ -73,6 +74,7 @@ function App() {
                       <Route path="events" element={<CoordinatorEvents />} />
                       <Route path="feedback" element={<CoordinatorFeedback />} />
                       <Route path="polls" element={<CoordinatorPolls />} />
+                      <Route path="profile" element={<CoordinatorProfile />} />
                       <Route path="my-club" element={<CoordinatorMembers />} />
                     </Routes>
                   </ProtectedRoute>

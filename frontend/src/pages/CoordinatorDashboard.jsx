@@ -135,6 +135,14 @@ const CoordinatorDashboard = () => {
             <div className={styles.cardIcon}>📊</div>
           </div>
         </Link>
+
+        <Link to="/coordinator/profile" className={styles.functionCard}>
+          <div className={styles.cardContent}>
+            <h3>🧾 My Profile</h3>
+            <p>Manage your profile and view statistics</p>
+            <div className={styles.cardIcon}>👤</div>
+          </div>
+        </Link>
       </div>
 
       <div className={styles.section}>
