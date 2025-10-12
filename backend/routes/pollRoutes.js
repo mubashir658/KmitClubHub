@@ -16,6 +16,8 @@ router.delete('/:pollId', auth, pollController.deletePoll);
 router.post('/club', auth, requireRole('coordinator'), pollController.createPoll);
 // Coordinator: list club polls (optional ?clubId=)
 router.get('/club', auth, requireRole('coordinator'), pollController.getCoordinatorClubPolls);
+// Coordinator: get my polls
+router.get('/coordinator/my-polls', auth, requireRole('coordinator'), pollController.getCoordinatorClubPolls);
 
 // Admin: create polls for all/coordinators/club
 router.post('/', auth, requireRole('admin'), pollController.createPoll);

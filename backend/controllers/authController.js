@@ -243,6 +243,11 @@ exports.createCoordinator = async (req, res) => {
 // Change password (for coordinators and students)
 exports.changePassword = async (req, res) => {
   try {
+    console.log('Change password request received:', {
+      userId: req.user.userId,
+      body: req.body
+    });
+    
     const { userId } = req.user;
     const { currentPassword, newPassword } = req.body;
 
@@ -254,12 +259,14 @@ exports.changePassword = async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
+      console.log('User not found for password change:', userId);
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Verify current password
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
+      console.log('Password mismatch for user:', userId);
       return res.status(400).json({ message: 'Current password is incorrect' });
     }
 
@@ -267,6 +274,7 @@ exports.changePassword = async (req, res) => {
     user.passwordHash = newPassword; // Will be hashed by pre-save hook
     await user.save();
 
+    console.log('Password updated successfully for user:', userId);
     res.json({ message: 'Password changed successfully' });
   } catch (err) {
     console.error('Change password error:', err);

@@ -47,6 +47,44 @@ router.post('/admin', auth, requireRole(['coordinator']), async (req, res) => {
   }
 });
 
+// Get feedback for coordinator
+router.get('/coordinator', auth, requireRole(['coordinator']), async (req, res) => {
+  try {
+    const coordinatorId = req.user.id;
+    
+    // First try to get the club using coordinatingClub field
+    let clubId = req.user.coordinatingClub;
+    
+    // If coordinatingClub is not set, try to find the club through coordinators array
+    if (!clubId) {
+      const Club = require('../models/Club');
+      const club = await Club.findOne({ coordinators: coordinatorId });
+      if (club) {
+        clubId = club._id;
+        console.log(`Found club for coordinator ${coordinatorId}: ${club.name}`);
+      }
+    }
+    
+    if (!clubId) {
+      return res.status(404).json({ message: 'No club assigned to this coordinator' });
+    }
+    
+    console.log(`Fetching feedback for club: ${clubId}`);
+    
+    const feedback = await Feedback.find({
+      club: clubId
+    })
+      .populate('club', 'name')
+      .populate('coordinator', 'name')
+      .populate('student', 'name rollNo')
+      .sort({ createdAt: -1 });
+
+    res.json(feedback);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get feedback for a specific club (coordinator view)
 router.get('/club', auth, requireRole(['coordinator']), async (req, res) => {
   try {

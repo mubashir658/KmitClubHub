@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       if (token) {
         try {
-          const response = await axios.get("http://localhost:5000/api/auth/profile")
+          const response = await axios.get("/api/auth/profile")
           console.log('Profile response:', response.data)
           console.log('Profile role:', response.data.role)
           setUser(response.data)
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (rollNo, password) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", { rollNo, password })
+      const response = await axios.post("/api/auth/login", { rollNo, password })
       const { token: newToken, user: userData } = response.data
 
       // Debug logging
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('AuthContext: Starting registration with userData:', userData)
       
-      const response = await axios.post("http://localhost:5000/api/auth/register", userData)
+      const response = await axios.post("/api/auth/register", userData)
       const { token: newToken, user: userInfo } = response.data
 
       // Debug logging

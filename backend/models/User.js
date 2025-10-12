@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema({
     type: String, 
     default: '' 
   },
+  phone: {
+    type: String,
+    default: ''
+  },
+  department: {
+    type: String,
+    default: ''
+  },
   year: { 
     type: Number,
     default: null

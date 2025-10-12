@@ -387,30 +387,6 @@
   font-size: 0.9rem;
 }
 
-.actionButtons {
-  margin-top: 2rem;
-  text-align: center;
-  padding-top: 1rem;
-  border-top: 1px solid #ecf0f1;
-}
-
-.downloadButton {
-  background: linear-gradient(135deg, #9b59b6, #8e44ad);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.downloadButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
-}
-
 /* Responsive Design */
 @media (max-width: 1024px) {
   .profileContent {

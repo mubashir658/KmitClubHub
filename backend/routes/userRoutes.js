@@ -165,18 +165,36 @@ router.get('/profile', auth, async (req, res) => {
 // Update user profile
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { name, profilePhoto } = req.body;
+    console.log('Profile update request received:', {
+      userId: req.user.userId,
+      body: req.body
+    });
+    
+    const { name, profilePhoto, phone, department } = req.body;
+    
+    // Build update object with only provided fields
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+    if (phone !== undefined) updateData.phone = phone;
+    if (department !== undefined) updateData.department = department;
+    
+    console.log('Update data:', updateData);
+    
     const user = await User.findByIdAndUpdate(
       req.user.userId,
-      { name, profilePhoto },
+      updateData,
       { new: true }
     ).select('-passwordHash').populate('coordinatingClub', 'name');
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    
+    console.log('Updated user:', user);
     res.json(user);
   } catch (err) {
+    console.error('Profile update error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });

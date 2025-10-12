@@ -14,12 +14,16 @@ exports.auth = async (req, res, next) => {
   
   try {
     const decoded = jwt.verify(token, secret);
+    console.log('JWT decoded:', decoded);
     
     // Fetch user data from database to get coordinatingClub
     const user = await User.findById(decoded.userId).select('-passwordHash');
     if (!user) {
+      console.log('User not found for ID:', decoded.userId);
       return res.status(401).json({ message: 'User not found' });
     }
+    
+    console.log('User found:', { id: user._id, role: user.role, name: user.name });
     
     req.user = {
       id: user._id,

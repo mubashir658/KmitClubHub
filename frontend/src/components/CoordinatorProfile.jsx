@@ -49,15 +49,27 @@ const CoordinatorProfile = () => {
     }
   }, [user])
 
+  // Also fetch fresh user data when component mounts
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axios.get("/api/users/profile")
+        updateUser(response.data)
+      } catch (error) {
+        console.error("Error fetching user profile:", error)
+      }
+    }
+    
+    if (user) {
+      fetchUserProfile()
+    }
+  }, [])
+
   const fetchStats = async () => {
     try {
       const [eventsRes, feedbackRes] = await Promise.all([
-        axios.get("/api/events/coordinator/my-events", {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }),
-        axios.get("/api/feedback/coordinator", {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
+        axios.get("/api/events/coordinator/my-events"),
+        axios.get("/api/feedback/coordinator")
       ])
 
       const events = eventsRes.data
@@ -78,9 +90,7 @@ const CoordinatorProfile = () => {
   const fetchClubInfo = async () => {
     try {
       if (user.coordinatingClub) {
-        const res = await axios.get(`/api/clubs/${user.coordinatingClub}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
+        const res = await axios.get(`/api/clubs/${user.coordinatingClub}`)
         const club = res.data
         setClubInfo({
           name: club.name,
@@ -96,12 +106,8 @@ const CoordinatorProfile = () => {
   const fetchRecentActivities = async () => {
     try {
       const [eventsRes, pollsRes] = await Promise.all([
-        axios.get("/api/events/coordinator/my-events", {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }),
-        axios.get("/api/polls/coordinator/my-polls", {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        })
+        axios.get("/api/events/coordinator/my-events"),
+        axios.get("/api/polls/coordinator/my-polls")
       ])
 
       const activities = []
@@ -183,25 +189,41 @@ const CoordinatorProfile = () => {
     setError("")
 
     try {
-      await axios.put("/api/users/profile", {
+      console.log('Sending profile update request:', {
+        name: formData.name,
+        phone: formData.phone,
+        department: formData.department,
+        profilePhoto: formData.profilePhoto ? 'Base64 image data' : 'No image'
+      });
+
+      const response = await axios.put("/api/users/profile", {
         name: formData.name,
         phone: formData.phone,
         department: formData.department,
         profilePhoto: formData.profilePhoto
       })
 
+      console.log('Profile update response:', response.data);
       setMessage("Profile updated successfully!")
       
+      // Update the user context with the response data
       updateUser({
         ...user,
-        name: formData.name,
-        phone: formData.phone,
-        department: formData.department,
-        profilePhoto: formData.profilePhoto
+        ...response.data
+      })
+
+      // Refresh the form data with the updated user data
+      setFormData({
+        name: response.data.name || "",
+        email: response.data.email || "",
+        phone: response.data.phone || "",
+        department: response.data.department || "",
+        profilePhoto: response.data.profilePhoto || ""
       })
 
     } catch (err) {
       console.error("Profile update error:", err)
+      console.error("Error response:", err.response?.data)
       setError(err.response?.data?.message || "Failed to update profile")
     } finally {
       setLoading(false)
@@ -221,11 +243,17 @@ const CoordinatorProfile = () => {
     }
 
     try {
+      console.log('Sending password update request:', {
+        currentPassword: passwordData.currentPassword ? 'Provided' : 'Not provided',
+        newPassword: passwordData.newPassword ? 'Provided' : 'Not provided'
+      });
+
       await axios.put("/api/auth/change-password", {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       })
 
+      console.log('Password update successful');
       setMessage("Password updated successfully!")
       setPasswordData({
         currentPassword: "",
@@ -235,33 +263,13 @@ const CoordinatorProfile = () => {
 
     } catch (err) {
       console.error("Password update error:", err)
+      console.error("Error response:", err.response?.data)
       setError(err.response?.data?.message || "Failed to update password")
     } finally {
       setLoading(false)
     }
   }
 
-  const downloadProfile = () => {
-    const profileData = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      department: formData.department,
-      role: "Coordinator",
-      club: clubInfo.name,
-      stats: stats,
-      lastUpdated: new Date().toLocaleDateString()
-    }
-
-    const dataStr = JSON.stringify(profileData, null, 2)
-    const dataBlob = new Blob([dataStr], { type: 'application/json' })
-    const url = URL.createObjectURL(dataBlob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${formData.name}_profile.json`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
 
   if (!user) {
     return <div className="loading">Loading profile...</div>
@@ -544,13 +552,6 @@ const CoordinatorProfile = () => {
                 )}
               </div>
             )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className={styles.actionButtons}>
-            <button onClick={downloadProfile} className={styles.downloadButton}>
-              📄 Download Profile
-            </button>
           </div>
         </div>
       </div>

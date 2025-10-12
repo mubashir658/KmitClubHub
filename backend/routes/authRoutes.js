@@ -10,6 +10,7 @@ router.post('/login', login);
 
 // Protected routes
 router.get('/profile', auth, getProfile);
+router.put('/change-password', auth, changePassword);
 router.post('/change-password', auth, changePassword);
 router.put('/update-profile', auth, updateProfile);
 router.post('/create-coordinator', auth, requireRole('admin'), createCoordinator);
