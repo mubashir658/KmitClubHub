@@ -2,29 +2,48 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { useToast } from "../context/ToastContext"
 import axios from "axios"
 import styles from "./Dashboard.module.css"
 
 const AdminEvents = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useToast()
   const navigate = useNavigate()
   const [pendingEvents, setPendingEvents] = useState([])
+  const [allClubsEvents, setAllClubsEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState({})
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [createFormData, setCreateFormData] = useState({
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    venue: '',
+    imageUrl: ''
+  })
 
   useEffect(() => {
-    fetchPendingEvents()
+    fetchData()
   }, [])
 
-  const fetchPendingEvents = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get("/api/events/admin/pending", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      })
-      setPendingEvents(response.data)
+      const [pendingRes, allClubsRes] = await Promise.all([
+        axios.get("/api/events/admin/pending", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }),
+        axios.get("/api/events/admin/all-clubs-events", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        })
+      ])
+      setPendingEvents(pendingRes.data)
+      setAllClubsEvents(allClubsRes.data)
     } catch (error) {
-      console.error("Error fetching pending events:", error)
+      console.error("Error fetching events:", error)
       setPendingEvents([])
+      setAllClubsEvents([])
     } finally {
       setLoading(false)
     }
@@ -38,10 +57,75 @@ const AdminEvents = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       
-      alert(`Event ${action}d successfully!`)
-      fetchPendingEvents() // Refresh the list
+      showSuccess(`Event ${action}d successfully!`)
+      fetchData() // Refresh the list
     } catch (error) {
-      alert(error.response?.data?.message || `Failed to ${action} event`)
+      showError(error.response?.data?.message || `Failed to ${action} event`)
+    } finally {
+      setProcessing(prev => ({ ...prev, [eventId]: false }))
+    }
+  }
+
+  const handleCreateEventForAllClubs = async (e) => {
+    e.preventDefault()
+    setProcessing(prev => ({ ...prev, create: true }))
+
+    try {
+      await axios.post("/api/events/admin/create-for-all-clubs", createFormData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      
+      showSuccess("Event created successfully for all clubs!")
+      setShowCreateForm(false)
+      setCreateFormData({
+        title: '',
+        description: '',
+        date: '',
+        time: '',
+        venue: '',
+        imageUrl: ''
+      })
+      fetchData() // Refresh the list
+    } catch (error) {
+      showError(error.response?.data?.message || "Failed to create event")
+    } finally {
+      setProcessing(prev => ({ ...prev, create: false }))
+    }
+  }
+
+  const handleToggleEventStatus = async (eventId, action) => {
+    setProcessing(prev => ({ ...prev, [eventId]: true }))
+
+    try {
+      await axios.put(`/api/events/admin/${eventId}/toggle-status`, { action }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      
+      showSuccess(`Event ${action}d successfully!`)
+      fetchData() // Refresh the list
+    } catch (error) {
+      showError(error.response?.data?.message || `Failed to ${action} event`)
+    } finally {
+      setProcessing(prev => ({ ...prev, [eventId]: false }))
+    }
+  }
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
+      return
+    }
+
+    setProcessing(prev => ({ ...prev, [eventId]: true }))
+
+    try {
+      await axios.delete(`/api/events/admin/${eventId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      
+      showSuccess("Event deleted successfully!")
+      fetchData() // Refresh the list
+    } catch (error) {
+      showError(error.response?.data?.message || "Failed to delete event")
     } finally {
       setProcessing(prev => ({ ...prev, [eventId]: false }))
     }
@@ -63,13 +147,201 @@ const AdminEvents = () => {
   return (
     <div className={styles.dashboardHome}>
       <div className={styles.welcomeSection}>
-        <h1>Event Approval Management</h1>
-        <p>Review and approve/reject event requests from coordinators</p>
+        <h1>Event Management</h1>
+        <p>Review coordinator events and create events for all clubs</p>
+      </div>
+
+      {/* Create Event for All Clubs Section */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2>Create Event for All Clubs</h2>
+          <button 
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className={styles.createBtn}
+          >
+            {showCreateForm ? 'Cancel' : '+ Create New Event'}
+          </button>
+        </div>
+
+        {showCreateForm && (
+          <form onSubmit={handleCreateEventForAllClubs} className={styles.createForm}>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Event Title *</label>
+                <input
+                  type="text"
+                  value={createFormData.title}
+                  onChange={(e) => setCreateFormData({...createFormData, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Date *</label>
+                <input
+                  type="date"
+                  value={createFormData.date}
+                  onChange={(e) => setCreateFormData({...createFormData, date: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label>Time *</label>
+                <input
+                  type="time"
+                  value={createFormData.time}
+                  onChange={(e) => setCreateFormData({...createFormData, time: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Venue *</label>
+                <input
+                  type="text"
+                  value={createFormData.venue}
+                  onChange={(e) => setCreateFormData({...createFormData, venue: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Description *</label>
+              <textarea
+                value={createFormData.description}
+                onChange={(e) => setCreateFormData({...createFormData, description: e.target.value})}
+                rows="4"
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Image URL (Optional)</label>
+              <input
+                type="url"
+                value={createFormData.imageUrl}
+                onChange={(e) => setCreateFormData({...createFormData, imageUrl: e.target.value})}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+
+            <div className={styles.formActions}>
+              <button 
+                type="submit" 
+                disabled={processing.create}
+                className={styles.submitBtn}
+              >
+                {processing.create ? "Creating..." : "Create Event for All Clubs"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Admin Created Events for All Clubs */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2>Events for All Clubs</h2>
+          <div className={styles.statsInfo}>
+            <span className={styles.pendingCount}>
+              {allClubsEvents.length} event{allClubsEvents.length !== 1 ? 's' : ''} created
+            </span>
+          </div>
+        </div>
+
+        {allClubsEvents.length > 0 ? (
+          <div className={styles.eventsList}>
+            {allClubsEvents.map((event) => (
+              <div key={event._id} className={styles.eventItem}>
+                <div className={styles.eventInfo}>
+                  <div className={styles.eventHeader}>
+                    <h4>{event.title}</h4>
+                    <span 
+                      className={styles.status} 
+                      style={{ 
+                        backgroundColor: event.status === 'approved' ? '#28a745' : '#dc3545' 
+                      }}
+                    >
+                      {event.status === 'approved' ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  
+                  <p className={styles.eventDescription}>{event.description}</p>
+                  
+                  <div className={styles.eventMeta}>
+                    <div className={styles.metaRow}>
+                      <span>📅 <strong>Date:</strong> {getEventDate(event.date)}</span>
+                      <span>🕒 <strong>Time:</strong> {event.time}</span>
+                    </div>
+                    <div className={styles.metaRow}>
+                      <span>📍 <strong>Venue:</strong> {event.venue}</span>
+                      <span>🏢 <strong>Scope:</strong> All Clubs</span>
+                    </div>
+                    <div className={styles.metaRow}>
+                      <span>👤 <strong>Created by:</strong> {event.createdBy?.name}</span>
+                      <span>📅 <strong>Created:</strong> {new Date(event.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  {event.imageUrl && (
+                    <div className={styles.eventImage}>
+                      <img 
+                        src={event.imageUrl} 
+                        alt={event.title}
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.eventActions}>
+                  <div className={styles.actionButtons}>
+                    {event.status === 'approved' ? (
+                      <button
+                        onClick={() => handleToggleEventStatus(event._id, "deactivate")}
+                        disabled={processing[event._id]}
+                        className={styles.deactivateBtn}
+                      >
+                        {processing[event._id] ? "Processing..." : "🔴 Deactivate Event"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleToggleEventStatus(event._id, "activate")}
+                        disabled={processing[event._id]}
+                        className={styles.activateBtn}
+                      >
+                        {processing[event._id] ? "Processing..." : "🟢 Activate Event"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteEvent(event._id)}
+                      disabled={processing[event._id]}
+                      className={styles.deleteBtn}
+                      title="Delete Event"
+                    >
+                      🗑️ Delete Event
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>🎯</div>
+            <h3>No Events Created Yet</h3>
+            <p>Create your first event for all clubs using the form above.</p>
+          </div>
+        )}
       </div>
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2>Pending Event Approvals</h2>
+          <h2>Coordinator Event Approvals</h2>
           <div className={styles.statsInfo}>
             <span className={styles.pendingCount}>
               {pendingEvents.length} event{pendingEvents.length !== 1 ? 's' : ''} pending

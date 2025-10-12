@@ -31,7 +31,13 @@ const eventSchema = new mongoose.Schema({
   club: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Club',
-    required: true
+    required: function() {
+      return !this.isForAllClubs;
+    }
+  },
+  isForAllClubs: {
+    type: Boolean,
+    default: false
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

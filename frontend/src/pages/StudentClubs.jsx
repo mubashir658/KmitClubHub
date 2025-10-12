@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { useToast } from "../context/ToastContext"
 import axios from "axios"
 import styles from "./StudentClubs.module.css"
 
 const StudentClubs = () => {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [joinedClubs, setJoinedClubs] = useState([])
   const [allClubs, setAllClubs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -54,20 +56,16 @@ const StudentClubs = () => {
 
     setSubmittingLeave(true)
     try {
-      console.log("Submitting leave request for club:", selectedClub._id, "with reason:", leaveReason)
       const response = await axios.post(`http://localhost:5000/api/clubs/${selectedClub._id}/request-leave`, { 
         reason: leaveReason 
       })
-      console.log("Leave request response:", response.data)
-      alert("Leave request submitted successfully! Waiting for coordinator approval.")
+      showSuccess("Leave request submitted successfully! Waiting for coordinator approval.")
       setShowLeaveModal(false)
       setSelectedClub(null)
       setLeaveReason("")
       fetchData() // Refresh data
     } catch (err) {
-      console.error("Error submitting leave request:", err)
-      console.error("Error response:", err.response?.data)
-      alert(err.response?.data?.message || "Failed to submit leave request")
+      showError(err.response?.data?.message || "Failed to submit leave request")
     } finally {
       setSubmittingLeave(false)
     }
@@ -81,12 +79,21 @@ const StudentClubs = () => {
 
   const handleJoinClub = async (clubId, clubKey) => {
     try {
-      await axios.post(`http://localhost:5000/api/clubs/${clubId}/join`, { clubKey })
-      alert("Successfully joined the club!")
+      const response = await axios.post(`http://localhost:5000/api/clubs/${clubId}/join`, { clubKey })
+      showSuccess("Successfully joined the club!")
+      
+      // Update user context with new club data
+      if (response.data.user) {
+        updateUser({
+          joinedClubs: response.data.user.joinedClubs,
+          year: response.data.user.year,
+          branch: response.data.user.branch
+        })
+      }
+      
       fetchData() // Refresh data
     } catch (err) {
-      console.error("Error joining club:", err)
-      alert(err.response?.data?.message || "Failed to join club")
+      showError(err.response?.data?.message || "Failed to join club")
     }
   }
 

@@ -230,7 +230,18 @@ exports.joinClub = async (req, res) => {
     user.clubs.push(clubId);
     await user.save();
 
-    res.json({ message: 'Successfully joined the club!' });
+    // Fetch updated user with populated clubs
+    const updatedUser = await User.findById(userId).populate('clubs');
+
+    res.json({ 
+      message: 'Successfully joined the club!',
+      user: {
+        id: updatedUser._id,
+        year: updatedUser.year,
+        branch: updatedUser.branch,
+        joinedClubs: updatedUser.clubs
+      }
+    });
   } catch (err) {
     console.error('Join club error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });

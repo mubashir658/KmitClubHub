@@ -12,6 +12,10 @@ router.get('/', async (req, res) => {
       .populate('createdBy', 'name')
       .sort({ date: 1 });
     
+    console.log('Events API - Total events:', events.length);
+    console.log('Events API - Events with imageUrl:', events.filter(e => e.imageUrl).length);
+    console.log('Events API - Sample event with imageUrl:', events.find(e => e.imageUrl));
+    
     res.json(events);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -45,6 +49,85 @@ router.get('/admin/pending', auth, requireRole(['admin']), async (req, res) => {
       .sort({ createdAt: -1 });
     
     res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get admin-created events for all clubs
+router.get('/admin/all-clubs-events', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const events = await Event.find({ isForAllClubs: true })
+      .populate('createdBy', 'name')
+      .sort({ createdAt: -1 });
+    
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin creates event for all clubs
+router.post('/admin/create-for-all-clubs', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const { title, description, date, time, venue, imageUrl } = req.body;
+    const adminId = req.user.userId;
+
+    console.log('Creating event with imageUrl:', imageUrl);
+    console.log('ImageUrl type:', typeof imageUrl);
+    console.log('ImageUrl length:', imageUrl?.length);
+
+    const event = new Event({
+      title,
+      description,
+      date,
+      time,
+      venue,
+      imageUrl: imageUrl || '',
+      isForAllClubs: true,
+      createdBy: adminId,
+      status: 'approved' // Admin events are auto-approved
+    });
+
+    await event.save();
+    console.log('Event saved with imageUrl:', event.imageUrl);
+    
+    const populatedEvent = await Event.findById(event._id)
+      .populate('createdBy', 'name');
+    
+    res.status(201).json(populatedEvent);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin activates/deactivates event for all clubs
+router.put('/admin/:id/toggle-status', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const { action } = req.body; // 'activate' or 'deactivate'
+    
+    if (!['activate', 'deactivate'].includes(action)) {
+      return res.status(400).json({ message: 'Invalid action. Use "activate" or "deactivate"' });
+    }
+    
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    if (!event.isForAllClubs) {
+      return res.status(400).json({ message: 'This endpoint is only for admin-created events for all clubs' });
+    }
+    
+    const status = action === 'activate' ? 'approved' : 'rejected';
+    event.status = status;
+    await event.save();
+    
+    const populatedEvent = await Event.findById(event._id)
+      .populate('createdBy', 'name');
+    
+    res.json({ message: `Event ${action}d successfully`, event: populatedEvent });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -199,6 +282,19 @@ router.post('/:id/register', auth, requireRole(['student']), async (req, res) =>
       return res.status(400).json({ message: 'Already registered for this event' });
     }
 
+    // Check if student can register for this event
+    // Allow registration if:
+    // 1. It's an admin event for all clubs (isForAllClubs = true)
+    // 2. Student is a member of the club that created the event
+    const studentClubIds = req.user.joinedClubs?.map(club => club._id.toString()) || [];
+    const eventClubId = event.club?.toString();
+    
+    if (!event.isForAllClubs && !studentClubIds.includes(eventClubId)) {
+      return res.status(403).json({ 
+        message: 'You can only register for events from clubs you are a member of' 
+      });
+    }
+
     event.registeredStudents.push(studentId);
     await event.save();
     
@@ -290,6 +386,23 @@ router.delete('/:id', auth, requireRole(['coordinator']), async (req, res) => {
     // Check if coordinator owns this event
     if (event.createdBy.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to delete this event' });
+    }
+
+    await Event.findByIdAndDelete(eventId);
+    res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin delete event (can delete any event)
+router.delete('/admin/:id', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const eventId = req.params.id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
     }
 
     await Event.findByIdAndDelete(eventId);

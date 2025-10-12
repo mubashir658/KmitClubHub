@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { useToast } from "../context/ToastContext"
 import axios from "axios"
 import styles from "./Dashboard.module.css"
 
 const CoordinatorEvents = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useToast()
   const navigate = useNavigate()
   const [events, setEvents] = useState([])
   const [showForm, setShowForm] = useState(false)
@@ -34,12 +36,9 @@ const CoordinatorEvents = () => {
 
   const testBackendConnection = async () => {
     try {
-      console.log('Testing backend connection...')
       const response = await axios.get('/api/health')
-      console.log('Backend health check:', response.data)
     } catch (error) {
-      console.error('Backend connection failed:', error)
-      console.error('This might explain why activate/deactivate is not working')
+      showError('Backend connection failed')
     }
   }
 
@@ -48,7 +47,6 @@ const CoordinatorEvents = () => {
       const response = await axios.get("/api/events/coordinator/my-events", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
-      console.log('Fetched events:', response.data)
       setEvents(response.data)
     } catch (error) {
       console.error("Error fetching events:", error)
@@ -113,23 +111,18 @@ const CoordinatorEvents = () => {
     }
 
     try {
-      console.log('Submitting event with imageUrl length:', formData.imageUrl?.length)
-      console.log('ImageUrl preview:', formData.imageUrl?.substring(0, 100) + '...')
-      
       if (isEditing && editingEvent) {
         // Update existing event
-        console.log('Updating event:', editingEvent._id, 'with data:', formData)
         const response = await axios.put(`/api/events/${editingEvent._id}`, formData, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         })
-        console.log('Update response:', response.data)
-        alert(response.data?.message || "Event updated successfully! Waiting for admin approval.")
+        showSuccess(response.data?.message || "Event updated successfully! Waiting for admin approval.")
       } else {
         // Create new event
         await axios.post("/api/events", formData, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         })
-        alert("Event created successfully! Waiting for admin approval.")
+        showSuccess("Event created successfully! Waiting for admin approval.")
       }
       
       // Success - reset form and show success message
@@ -250,8 +243,6 @@ const CoordinatorEvents = () => {
       const reader = new FileReader()
       reader.onload = (event) => {
         const base64String = event.target.result
-        console.log('Image converted to base64, length:', base64String.length)
-        console.log('Base64 preview:', base64String.substring(0, 100) + '...')
         setFormData(prev => ({
           ...prev,
           imageUrl: base64String // This will be the base64 string
@@ -263,7 +254,6 @@ const CoordinatorEvents = () => {
 
 
   const handleEdit = (event) => {
-    console.log('Editing event:', event)
     setEditingEvent(event)
     setIsEditing(true)
     
@@ -283,7 +273,6 @@ const CoordinatorEvents = () => {
       imageUrl: event.imageUrl || ""
     }
     
-    console.log('Setting form data for edit:', formDataToSet)
     setFormData(formDataToSet)
     setShowForm(true)
     setSubmitError("")
@@ -321,16 +310,29 @@ const CoordinatorEvents = () => {
   const handleDeactivate = async (eventId) => {
     if (!window.confirm("Deactivate this approved event?")) return
     try {
-      console.log('Deactivating event:', eventId)
       const response = await axios.put(`/api/events/${eventId}/deactivate`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
-      console.log('Deactivate response:', response.data)
-      alert("Event deactivated successfully!")
+      showSuccess("Event deactivated successfully!")
       fetchEvents()
     } catch (error) {
-      console.error('Deactivate error:', error)
-      alert(error.response?.data?.message || "Failed to deactivate event")
+      showError(error.response?.data?.message || "Failed to deactivate event")
+    }
+  }
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      await axios.delete(`/api/events/${eventId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      showSuccess("Event deleted successfully!")
+      fetchEvents() // Refresh the list
+    } catch (error) {
+      showError(error.response?.data?.message || "Failed to delete event")
     }
   }
 
@@ -540,9 +542,7 @@ const CoordinatorEvents = () => {
 
         {events.length > 0 ? (
           <div className={styles.eventsList}>
-            {events.map((event) => {
-              console.log('Rendering event:', event.title, 'Status:', event.status)
-              return (
+            {events.map((event) => (
               <div key={event._id} className={styles.eventItem}>
                 <div className={styles.eventInfo}>
                   <div className={styles.eventHeader}>
@@ -571,6 +571,21 @@ const CoordinatorEvents = () => {
                       >
                         Edit
                       </button>
+                      <button
+                        onClick={() => handleDeleteEvent(event._id)}
+                        className={styles.deleteBtn}
+                        style={{
+                          backgroundColor: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
                       <span className={styles.pendingNote}>⏳ Waiting for admin approval</span>
                     </div>
                   )}
@@ -592,17 +607,46 @@ const CoordinatorEvents = () => {
                       >
                         Deactivate
                       </button>
+                      <button
+                        onClick={() => handleDeleteEvent(event._id)}
+                        className={styles.deleteBtn}
+                        style={{
+                          backgroundColor: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
                   )}
                   {(event.status === "rejected") && (
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span className={styles.rejectedNote}>❌ Event was rejected</span>
+                      <button
+                        onClick={() => handleDeleteEvent(event._id)}
+                        className={styles.deleteBtn}
+                        style={{
+                          backgroundColor: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
-              )
-            })}
+            ))}
           </div>
         ) : (
           <p>No events created yet. Create your first event above!</p>

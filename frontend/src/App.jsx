@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
+import { ToastProvider } from "./context/ToastContext"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import Home from "./pages/Home"
@@ -31,7 +32,8 @@ import AdminEvents from "./pages/AdminEvents"
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <ToastProvider>
+        <Router>
         <div className="App">
           <Navbar />
           <main className="main-content">
@@ -115,7 +117,8 @@ function App() {
           </main>
           <Footer />
         </div>
-      </Router>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   )
 }
