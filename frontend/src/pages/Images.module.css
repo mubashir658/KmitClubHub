@@ -1,92 +1,133 @@
 .imagesPage {
   padding: 40px 0;
   min-height: 80vh;
+  background: #f8fafc;
 }
 
+/* Header */
 .header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 35px;
 }
 
 .header h1 {
-  font-size: 2.5rem;
+  font-size: 2.4rem;
   color: #2c3e50;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
 .header p {
   color: #7f8c8d;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
-.loading {
-  display: flex;
+/* ---------- SAMPLE IMAGES (Top Gallery) ---------- */
+.sampleImagesSection {
+  margin-bottom: 50px;
+  padding: 0 20px;
+}
+
+.sampleImagesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 per row */
+  gap: 26px;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
-  font-size: 1.2rem;
-  color: #7f8c8d;
 }
 
-.noImages {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.noImages h3 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
-
-.noImages p {
-  color: #7f8c8d;
-}
-
-.imageGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 30px;
-}
-
-.imageCard {
-  background: white;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+.sampleImage {
+  width: 450px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.imageCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+.sampleImage:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* ---------- EVENT CARDS GRID ---------- */
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 per row */
+  gap: 28px;
+  padding: 0 20px;
+}
+
+/* Event Card */
+.imageCard {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.imageCard:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Event Image */
 .eventImage {
   width: 100%;
-  height: 200px;
+  height: 180px;
   object-fit: cover;
+  border-bottom: 1px solid #f1f1f1;
+  background: #e3e8ee;
 }
 
+/* Card Info */
 .imageInfo {
-  padding: 20px;
+  padding: 14px 16px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+  text-align: center;
 }
 
 .imageInfo h3 {
   color: #2c3e50;
-  margin-bottom: 8px;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .imageInfo p {
   color: #667eea;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
+/* Date Text */
 .date {
   color: #7f8c8d;
   font-size: 0.9rem;
+}
+
+/* ---------- RESPONSIVE DESIGN ---------- */
+@media (max-width: 1024px) {
+  .sampleImagesGrid,
+  .imageGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .sampleImage {
+    height: 200px;
+  }
+
+  .eventImage {
+    height: 160px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -95,11 +136,28 @@
   }
 
   .header h1 {
-    font-size: 2rem;
+    font-size: 1.9rem;
   }
 
+  .sampleImagesGrid,
   .imageGrid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
   }
-} 
+
+  .sampleImage {
+    height: 180px;
+  }
+
+  .eventImage {
+    height: 140px;
+  }
+
+  .imageInfo {
+    padding: 10px 12px;
+  }
+
+  .imageInfo h3 {
+    font-size: 1rem;
+  }
+}
