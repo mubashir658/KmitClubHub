@@ -51,7 +51,7 @@ const Home = () => {
         
         // Calculate active members (students who have joined at least one club)
         const activeMembers = usersRes.data.filter(user => 
-          user.role === 'student' && user.joinedClubs && user.joinedClubs.length > 0
+          user.role === 'student' && user.clubs && user.clubs.length > 0
         ).length
         
         // Calculate events this year
