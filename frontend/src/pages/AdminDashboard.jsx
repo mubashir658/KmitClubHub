@@ -1,4 +1,3 @@
-"use client"
 
 import { useState, useEffect } from "react"
 import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom"
@@ -7,6 +6,11 @@ import axios from "axios"
 import styles from "./Dashboard.module.css"
 import AdminFeedback from "./AdminFeedback"
 import AdminPolls from "./AdminPolls"
+
+/*My New Admin Users Component*/
+
+
+/*End of My New Admin Users Component*/
 
 const AdminDashboard = () => {
   const { user } = useAuth()

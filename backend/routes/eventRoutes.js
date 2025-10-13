@@ -113,6 +113,52 @@ router.put('/:id/approve', auth, requireRole(['admin']), async (req, res) => {
   }
 });
 
+// Coordinator activates a rejected event (sets status to approved)
+router.put('/:id/activate', auth, requireRole(['coordinator']), async (req, res) => {
+  try {
+    console.log('Activate route hit for event:', req.params.id);
+    const eventId = req.params.id;
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (String(event.club) !== String(req.user.coordinatingClub)) {
+      return res.status(403).json({ message: 'Not authorized to activate this event' });
+    }
+    if (event.status !== 'rejected') {
+      return res.status(400).json({ message: 'Only rejected events can be activated' });
+    }
+    event.status = 'approved';
+    await event.save();
+    console.log('Event activated successfully:', eventId);
+    res.json({ message: 'Event activated', event });
+  } catch (error) {
+    console.error('Activate error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Coordinator deactivates an approved event (sets status to rejected)
+router.put('/:id/deactivate', auth, requireRole(['coordinator']), async (req, res) => {
+  try {
+    console.log('Deactivate route hit for event:', req.params.id);
+    const eventId = req.params.id;
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (String(event.club) !== String(req.user.coordinatingClub)) {
+      return res.status(403).json({ message: 'Not authorized to deactivate this event' });
+    }
+    if (event.status !== 'approved') {
+      return res.status(400).json({ message: 'Only approved events can be deactivated' });
+    }
+    event.status = 'rejected';
+    await event.save();
+    console.log('Event deactivated successfully:', eventId);
+    res.json({ message: 'Event deactivated', event });
+  } catch (error) {
+    console.error('Deactivate error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get coordinator's club events
 router.get('/coordinator/my-events', auth, requireRole(['coordinator']), async (req, res) => {
   try {
@@ -185,25 +231,7 @@ router.delete('/:id/register', auth, requireRole(['student']), async (req, res) 
   }
 });
 
-// Get event details
-router.get('/:id', async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id)
-      .populate('club', 'name logoUrl description')
-      .populate('createdBy', 'name')
-      .populate('registeredStudents', 'name rollNo');
-    
-    if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
-    }
-    
-    res.json(event);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Update event (coordinator can update pending events)
+// Update event (coordinator can update only when event is pending and belongs to their club)
 router.put('/:id', auth, requireRole(['coordinator']), async (req, res) => {
   try {
     const eventId = req.params.id;
@@ -214,13 +242,21 @@ router.put('/:id', auth, requireRole(['coordinator']), async (req, res) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    // Only allow updates to pending events
+    // Must be pending to edit
     if (event.status !== 'pending') {
       return res.status(400).json({ message: 'Can only update pending events' });
     }
 
-    // Check if coordinator owns this event
-    if (event.createdBy.toString() !== req.user.id) {
+    // Authorization: creator OR coordinator of this event's club
+    const isCreator = String(event.createdBy) === String(req.user.id)
+    const isClubCoordinator = String(event.club) === String(req.user.coordinatingClub)
+    if (!isCreator && !isClubCoordinator) {
+      console.log('Update denied:', {
+        eventId: event._id.toString(),
+        eventClub: event.club?.toString(),
+        userId: req.user.id?.toString(),
+        coordinatingClub: req.user.coordinatingClub?.toString()
+      })
       return res.status(403).json({ message: 'Not authorized to update this event' });
     }
 
@@ -229,8 +265,8 @@ router.put('/:id', auth, requireRole(['coordinator']), async (req, res) => {
       { title, description, date, time, venue, imageUrl },
       { new: true }
     ).populate('club', 'name').populate('createdBy', 'name');
-    
-    res.json(updatedEvent);
+
+    res.json({ message: 'Event updated. Pending admin approval.', event: updatedEvent });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -258,6 +294,24 @@ router.delete('/:id', auth, requireRole(['coordinator']), async (req, res) => {
 
     await Event.findByIdAndDelete(eventId);
     res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get event details
+router.get('/:id', async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('club', 'name logoUrl description')
+      .populate('createdBy', 'name')
+      .populate('registeredStudents', 'name rollNo');
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    res.json(event);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

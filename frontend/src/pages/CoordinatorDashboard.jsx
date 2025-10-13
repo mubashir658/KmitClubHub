@@ -1,7 +1,6 @@
-"use client"
 
 import { useState, useEffect } from "react"
-import { Routes, Route, Link, useLocation } from "react-router-dom"
+import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import axios from "axios"
 import styles from "./Dashboard.module.css"
@@ -10,6 +9,7 @@ import CoordinatorPolls from "./CoordinatorPolls"
 
 const CoordinatorDashboard = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const location = useLocation()
   const [membershipRequests, setMembershipRequests] = useState([])
   const [clubMembers, setClubMembers] = useState([])
@@ -97,6 +97,13 @@ const CoordinatorDashboard = () => {
       </div>
 
       <div className={styles.functionalityGrid}>
+        <div onClick={() => navigate('/coordinator/my-club')} className={styles.functionCard} style={{ cursor: 'pointer' }}>
+          <div className={styles.cardContent}>
+            <h3>My Club</h3>
+            <p>View your assigned club details</p>
+            <div className={styles.cardIcon}>🏢</div>
+          </div>
+        </div>
         <Link to="/coordinator/members" className={styles.functionCard}>
           <div className={styles.cardContent}>
             <h3>Member Management</h3>

@@ -1,4 +1,3 @@
-"use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
@@ -19,17 +18,47 @@ const ClubDetail = () => {
 
   useEffect(() => {
     fetchClub()
+    fetchEvents()
     // eslint-disable-next-line
   }, [id])
 
   const fetchClub = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/clubs/${id}`)
+      const response = await axios.get(`/api/clubs/${id}`)
       setClub(response.data)
     } catch (error) {
       setError("Failed to load club details")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const [upcomingEvents, setUpcomingEvents] = useState([])
+  const [pastEvents, setPastEvents] = useState([])
+
+  const fetchEvents = async () => {
+    try {
+      // fetch approved events for this club
+      const res = await axios.get(`/api/events/club/${id}`)
+      const now = new Date()
+      const approved = Array.isArray(res.data) ? res.data : []
+      const upcoming = []
+      const past = []
+      approved.forEach(evt => {
+        const evtDate = new Date(evt.date)
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        if (evtDate >= today) {
+          upcoming.push(evt)
+        } else {
+          past.push(evt)
+        }
+      })
+      upcoming.sort((a,b)=> new Date(a.date) - new Date(b.date))
+      past.sort((a,b)=> new Date(b.date) - new Date(a.date))
+      setUpcomingEvents(upcoming)
+      setPastEvents(past)
+    } catch (e) {
+      console.error('Failed to load events for club', e)
     }
   }
 
@@ -41,7 +70,7 @@ const ClubDetail = () => {
     e.preventDefault()
     setEnrollMsg("")
     try {
-      const res = await axios.post(`http://localhost:5000/api/clubs/${id}/enroll`, {
+      const res = await axios.post(`/api/clubs/${id}/enroll`, {
         year: enrollForm.year ? Number(enrollForm.year) : undefined,
         branch: enrollForm.branch || undefined
       }, {
@@ -80,7 +109,13 @@ const ClubDetail = () => {
         {/* Club Header */}
         <div className={styles.clubHeader}>
           <div className={styles.clubLogo}>
-            <img src={club.logoUrl || "/placeholder.svg"} alt={club.name} />
+            <img src={
+                        club.logoUrl 
+                          ? club.logoUrl.startsWith('http') 
+                            ? club.logoUrl 
+                            : `http://localhost:5000${club.logoUrl}`
+                          : "/placeholder.svg"
+                      } alt={club.name} />
           </div>
           <div className={styles.clubInfo}>
             <h1 className={styles.clubName}>{club.name}</h1>
@@ -162,25 +197,29 @@ const ClubDetail = () => {
           </div>
         )}
 
-        {/* Past Events */}
-        {club.eventsConducted && club.eventsConducted.length > 0 && (
+        {/* Past Events (from fetched events) */}
+        {pastEvents.length > 0 && (
           <div className={styles.section}>
             <h2>Past Events</h2>
             <ul>
-              {club.eventsConducted.map((event, idx) => (
-                <li key={idx}>{event}</li>
+              {pastEvents.map((evt) => (
+                <li key={evt._id}>
+                  {evt.title} — {new Date(evt.date).toLocaleDateString()} @ {evt.venue}
+                </li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Upcoming Events */}
-        {club.upcomingEvents && club.upcomingEvents.length > 0 && (
+        {/* Upcoming Events (from fetched events) */}
+        {upcomingEvents.length > 0 && (
           <div className={styles.section}>
             <h2>Upcoming Events</h2>
             <ul>
-              {club.upcomingEvents.map((event, idx) => (
-                <li key={idx}>{event}</li>
+              {upcomingEvents.map((evt) => (
+                <li key={evt._id}>
+                  {evt.title} — {new Date(evt.date).toLocaleDateString()} @ {evt.venue}
+                </li>
               ))}
             </ul>
           </div>

@@ -1,4 +1,3 @@
-"use client"
 
 import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
@@ -12,6 +11,7 @@ const Calendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showEventModal, setShowEventModal] = useState(false)
+  const [viewType, setViewType] = useState('all') // 'all' | 'my'
 
   useEffect(() => {
     fetchEvents()
@@ -56,9 +56,20 @@ const Calendar = () => {
     return user && event.registeredStudents?.some(student => student._id === user.id)
   }
 
-  const openEventModal = (event) => {
-    setSelectedEvent(event)
-    setShowEventModal(true)
+  const openEventModal = async (event) => {
+    try {
+      const response = await axios.get(`/api/events/${event._id}`)
+      console.log('Event data received:', response.data)
+      console.log('ImageUrl length:', response.data.imageUrl?.length)
+      console.log('ImageUrl preview:', response.data.imageUrl?.substring(0, 100) + '...')
+      setSelectedEvent(response.data)
+      setShowEventModal(true)
+    } catch (error) {
+      console.error('Error loading event details:', error)
+      // Fallback to basic event if detailed fetch fails
+      setSelectedEvent(event)
+      setShowEventModal(true)
+    }
   }
 
   const closeEventModal = () => {
@@ -77,8 +88,22 @@ const Calendar = () => {
     return { daysInMonth, startingDay }
   }
 
+  const getFilteredEvents = () => {
+    if (viewType === 'my') {
+      if (user?.role === 'student' && user?.joinedClubs?.length) {
+        const myClubIds = user.joinedClubs.map(c => c._id)
+        return events.filter(e => myClubIds.includes(e.club?._id || e.club))
+      }
+      if (user?.role === 'coordinator' && user?.coordinatingClub) {
+        return events.filter(e => String(e.club?._id || e.club) === String(user.coordinatingClub))
+      }
+    }
+    return events
+  }
+
   const getEventsForDay = (day) => {
-    return events.filter(event => {
+    const source = getFilteredEvents()
+    return source.filter(event => {
       const eventDate = new Date(event.date)
       return eventDate.getDate() === day && 
              eventDate.getMonth() === currentMonth.getMonth() &&
@@ -119,6 +144,21 @@ const Calendar = () => {
         <div className={styles.header}>
           <h1>Event Calendar</h1>
           <p>Stay updated with all upcoming events and activities</p>
+          <div className={styles.viewToggle}>
+            <button 
+              className={`${styles.toggleBtn} ${viewType === 'all' ? styles.active : ''}`}
+              onClick={() => setViewType('all')}
+            >
+              All Clubs Calendar
+            </button>
+            <button 
+              className={`${styles.toggleBtn} ${viewType === 'my' ? styles.active : ''}`}
+              onClick={() => setViewType('my')}
+              disabled={(user?.role === 'student' && !user?.joinedClubs?.length) || (user?.role === 'coordinator' && !user?.coordinatingClub)}
+            >
+              My Clubs Calendar
+            </button>
+          </div>
         </div>
 
         <div className={styles.calendarContainer}>
@@ -170,7 +210,7 @@ const Calendar = () => {
           <div className={styles.upcomingEvents}>
             <h3>Upcoming Events</h3>
             <div className={styles.eventsList}>
-              {events
+              {getFilteredEvents()
                 .filter(event => new Date(event.date) >= new Date())
                 .sort((a, b) => new Date(a.date) - new Date(b.date))
                 .slice(0, 8)
@@ -226,10 +266,22 @@ const Calendar = () => {
               <div className={styles.modalContent}>
                 <div className={styles.eventImage}>
                   {selectedEvent.imageUrl ? (
-                    <img src={selectedEvent.imageUrl} alt={selectedEvent.title} />
-                  ) : (
-                    <div className={styles.placeholderImage}>📅</div>
-                  )}
+                    <img 
+                      src={selectedEvent.imageUrl} 
+                      alt={selectedEvent.title}
+                      onError={(e) => {
+                        console.error('Image failed to load:', selectedEvent.imageUrl?.substring(0, 100) + '...');
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={styles.placeholderImage}
+                    style={{ display: selectedEvent.imageUrl ? 'none' : 'flex' }}
+                  >
+                    📅
+                  </div>
                 </div>
                 
                 <div className={styles.eventInfo}>
@@ -290,6 +342,19 @@ const Calendar = () => {
                   <div className={styles.registrationCount}>
                     <h4>Total Registrations: {selectedEvent.registeredStudents?.length || 0}</h4>
                   </div>
+
+                  {selectedEvent.registeredStudents && selectedEvent.registeredStudents.length > 0 && (
+                    <div className={styles.registeredStudentsList}>
+                      <h4>Registered Students</h4>
+                      <ul>
+                        {selectedEvent.registeredStudents.map(s => (
+                          <li key={s._id}>
+                            {s.name} {s.rollNo ? `(${s.rollNo})` : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

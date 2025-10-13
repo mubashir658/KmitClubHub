@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  section: { 
+    type: String,
+    default: null
+  },
   clubs: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Club' 
@@ -79,12 +83,10 @@ userSchema.pre('save', async function (next) {
     next(err);
   }
 });
-
 // Compare password method
 userSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.passwordHash);
 };
-
 // Virtual for password (to handle plain text passwords during creation)
 userSchema.virtual('password')
   .set(function(password) {
@@ -93,7 +95,6 @@ userSchema.virtual('password')
   .get(function() {
     return this.passwordHash;
   });
-
 // Ensure virtual fields are serialized
 userSchema.set('toJSON', {
   virtuals: true,
@@ -102,5 +103,4 @@ userSchema.set('toJSON', {
     return ret;
   }
 });
-
 module.exports = mongoose.model('User', userSchema);

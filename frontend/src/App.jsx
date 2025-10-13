@@ -9,10 +9,13 @@ import Images from "./pages/Images"
 import Calendar from "./pages/Calendar"
 import ClubDetail from "./pages/ClubDetail"
 import StudentDashboard from "./pages/StudentDashboard"
+import StudentProfile from "./pages/StudentProfile"
+import StudentClubs from "./pages/StudentClubs"
 import CoordinatorDashboard from "./pages/CoordinatorDashboard"
 import CoordinatorMembers from "./pages/CoordinatorMembers"
 import AdminDashboard from "./pages/AdminDashboard"
 import AdminClubs from "./pages/AdminClubs"
+import AdminUsers from "./pages/AdminUsers"
 import CreateCoordinator from "./pages/CreateCoordinator"
 import ProtectedRoute from "./components/ProtectedRoute"
 import RoleSelect from "./pages/RoleSelect"
@@ -48,11 +51,11 @@ function App() {
                     <Routes>
                       <Route path="dashboard" element={<StudentDashboard />} />
                       <Route path="" element={<StudentDashboard />} />
-                      <Route path="clubs" element={<StudentDashboard />} />
-                      <Route path="calendar" element={<StudentDashboard />} />
+                      <Route path="clubs" element={<StudentClubs />} />
+                      <Route path="calendar" element={<Calendar />} />
                       <Route path="feedback" element={<StudentFeedback />} />
                       <Route path="polls" element={<StudentPolls />} />
-                      <Route path="profile" element={<StudentDashboard />} />
+                      <Route path="profile" element={<StudentProfile />} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -70,6 +73,7 @@ function App() {
                       <Route path="events" element={<CoordinatorEvents />} />
                       <Route path="feedback" element={<CoordinatorFeedback />} />
                       <Route path="polls" element={<CoordinatorPolls />} />
+                      <Route path="my-club" element={<CoordinatorMembers />} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -86,7 +90,7 @@ function App() {
                       <Route path="create-coordinator" element={<CreateCoordinator />} />
                       <Route path="clubs" element={<AdminClubs />} />
                       <Route path="events" element={<AdminEvents />} />
-                      <Route path="users" element={<AdminDashboard />} />
+                      <Route path="users" element={<AdminUsers />} />
                       <Route path="feedback" element={<AdminFeedback />} />
                       <Route path="polls" element={<AdminPolls />} />
                       <Route path="analytics" element={<AdminDashboard />} />

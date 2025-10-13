@@ -19,6 +19,36 @@
   font-size: 1.1rem;
 }
 
+.viewToggle {
+  display: inline-flex;
+  gap: 10px;
+  background: #f1f3f5;
+  border: 1px solid #dee2e6;
+  padding: 6px;
+  border-radius: 999px;
+  margin-top: 16px;
+}
+
+.toggleBtn {
+  background: transparent;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #495057;
+}
+
+.toggleBtn:hover {
+  background: #e9ecef;
+}
+
+.toggleBtn.active {
+  background: white;
+  color: #2c3e50;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
 .loading {
   display: flex;
   justify-content: center;
@@ -444,6 +474,30 @@
 .registrationCount h4 {
   margin: 0;
   font-size: 16px;
+}
+
+.registeredStudentsList {
+  margin-top: 16px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.registeredStudentsList h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.registeredStudentsList ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.registeredStudentsList li {
+  margin: 4px 0;
+  color: #555;
 }
 
 /* Responsive adjustments */

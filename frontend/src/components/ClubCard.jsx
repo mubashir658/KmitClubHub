@@ -22,7 +22,13 @@ const ClubCard = ({ club }) => {
   return (
     <div className={styles.clubCard}>
       <div className={styles.clubLogo}>
-        <img src={club.logoUrl || "/placeholder.svg"} alt={club.name} />
+        <img src={
+                        club.logoUrl 
+                          ? club.logoUrl.startsWith('http') 
+                            ? club.logoUrl 
+                            : `http://localhost:5000${club.logoUrl}`
+                          : "/placeholder.svg"
+                      } alt={club.name} />
       </div>
 
       <div className={styles.clubInfo}>

@@ -1,4 +1,3 @@
-"use client"
 
 import { useAuth } from "../context/AuthContext"
 import styles from "./EventCard.module.css"
@@ -30,7 +29,13 @@ const EventCard = ({ event, onRegister }) => {
         <div className={styles.eventHeader}>
           <h3 className={styles.eventTitle}>{event.title}</h3>
           <div className={styles.clubInfo}>
-            <img src={event.club?.logoUrl || "/placeholder.svg"} alt={event.club?.name} />
+            <img src={
+                        event.club?.logoUrl 
+                          ? event.club.logoUrl.startsWith('http') 
+                            ? event.club.logoUrl 
+                            : `http://localhost:5000${event.club.logoUrl}`
+                          : "/placeholder.svg"
+                      } alt={event.club?.name} />
             <span>{event.club?.name}</span>
           </div>
         </div>

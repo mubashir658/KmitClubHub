@@ -9,6 +9,9 @@ router.get('/active', auth, pollController.getActivePollsForUser);
 // Vote in a poll
 router.post('/:pollId/vote', auth, pollController.vote);
 
+// Delete poll
+router.delete('/:pollId', auth, pollController.deletePoll);
+
 // Coordinator: create club poll
 router.post('/club', auth, requireRole('coordinator'), pollController.createPoll);
 // Coordinator: list club polls (optional ?clubId=)
