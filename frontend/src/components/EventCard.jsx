@@ -5,12 +5,6 @@ import styles from "./EventCard.module.css"
 const EventCard = ({ event, onRegister }) => {
   const { user } = useAuth()
   
-  // Debug logging
-  console.log('EventCard received event:', event);
-  console.log('EventCard event.imageUrl:', event.imageUrl);
-  console.log('EventCard event.imageUrl type:', typeof event.imageUrl);
-  console.log('EventCard event.imageUrl length:', event.imageUrl?.length);
-  console.log('EventCard event.imageUrl truthy:', !!event.imageUrl);
   
   // Check if this is a new event
   const isNewEvent = () => {
@@ -58,11 +52,7 @@ const EventCard = ({ event, onRegister }) => {
           <img 
             src={event.imageUrl} 
             alt={event.title}
-            onLoad={() => {
-              console.log('EventCard image loaded successfully:', event.imageUrl);
-            }}
             onError={(e) => {
-              console.error('EventCard image failed to load:', event.imageUrl);
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';
             }}

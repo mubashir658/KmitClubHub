@@ -41,16 +41,31 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [clubsRes, statsRes] = await Promise.all([
-          axios.get('/api/clubs'),
-          axios.get('/api/clubs/statistics')
+        const [clubsRes, usersRes, eventsRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/clubs'),
+          axios.get('http://localhost:5000/api/users'),
+          axios.get('http://localhost:5000/api/events')
         ])
         
-        console.log('Frontend - Clubs response:', clubsRes.data);
-        console.log('Frontend - Statistics response:', statsRes.data);
-        
         setClubs(clubsRes.data)
-        setStats(statsRes.data)
+        
+        // Calculate active members (students who have joined at least one club)
+        const activeMembers = usersRes.data.filter(user => 
+          user.role === 'student' && user.joinedClubs && user.joinedClubs.length > 0
+        ).length
+        
+        // Calculate events this year
+        const currentYear = new Date().getFullYear()
+        const eventsThisYear = eventsRes.data.filter(event => {
+          const eventDate = new Date(event.date)
+          return eventDate.getFullYear() === currentYear
+        }).length
+        
+        setStats({
+          clubs: clubsRes.data.length,
+          members: activeMembers,
+          events: eventsThisYear
+        })
       } catch (error) {
         console.error('Failed to load statistics data:', error)
         // Set default stats to avoid UI errors

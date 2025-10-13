@@ -23,6 +23,7 @@ const AdminEvents = () => {
     venue: '',
     imageUrl: ''
   })
+  const [imageError, setImageError] = useState("")
 
   useEffect(() => {
     fetchData()
@@ -85,6 +86,7 @@ const AdminEvents = () => {
         venue: '',
         imageUrl: ''
       })
+      setImageError("")
       fetchData() // Refresh the list
     } catch (error) {
       showError(error.response?.data?.message || "Failed to create event")
@@ -128,6 +130,37 @@ const AdminEvents = () => {
       showError(error.response?.data?.message || "Failed to delete event")
     } finally {
       setProcessing(prev => ({ ...prev, [eventId]: false }))
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setImageError('Please select a valid image file')
+        return
+      }
+      
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setImageError('Image size should be less than 2MB')
+        return
+      }
+      
+      // Clear any previous errors
+      setImageError('')
+      
+      // Convert image to base64 for storage
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const base64String = event.target.result
+        setCreateFormData(prev => ({
+          ...prev,
+          imageUrl: base64String // This will be the base64 string
+        }))
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -218,13 +251,52 @@ const AdminEvents = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Image URL (Optional)</label>
+              <label htmlFor="eventImage">Event Image (Optional)</label>
               <input
-                type="url"
-                value={createFormData.imageUrl}
-                onChange={(e) => setCreateFormData({...createFormData, imageUrl: e.target.value})}
-                placeholder="https://example.com/image.jpg"
+                type="file"
+                id="eventImage"
+                name="eventImage"
+                onChange={handleFileChange}
+                accept="image/*"
+                className={styles.formControl}
               />
+              <small>Select an image file (max 2MB)</small>
+              {imageError && <div className={styles.errorMessage}>{imageError}</div>}
+              {createFormData.imageUrl && (
+                <div className={styles.imagePreview}>
+                  <img 
+                    src={createFormData.imageUrl} 
+                    alt="Event preview" 
+                    style={{ 
+                      width: '150px', 
+                      height: '150px', 
+                      objectFit: 'cover', 
+                      borderRadius: '8px',
+                      marginTop: '10px'
+                    }}
+                  />
+                  <div style={{ marginTop: '10px' }}>
+                    <small>Image preview</small>
+                    <button 
+                      type="button" 
+                      onClick={() => setCreateFormData(prev => ({ ...prev, imageUrl: '' }))}
+                      className={styles.removePhotoButton}
+                      style={{
+                        marginLeft: '10px',
+                        padding: '5px 10px',
+                        backgroundColor: '#dc3545',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className={styles.formActions}>
