@@ -162,6 +162,7 @@ exports.getProfile = async (req, res) => {
       branch: user.branch,
       section: user.section,
       profilePhoto: user.profilePhoto,
+      academicInfoSet: user.academicInfoSet,
       coordinatingClub: user.coordinatingClub,
       joinedClubs: populatedClubs, // Use populated clubs
       createdAt: user.createdAt,
@@ -349,10 +350,22 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Check restrictions for branch and section
+    if (user.academicInfoSet && (branch !== undefined || section !== undefined)) {
+      return res.status(400).json({ 
+        message: 'Branch and section can only be set once and cannot be changed' 
+      });
+    }
+
     // Update fields if provided
     if (year !== undefined) user.year = year;
     if (branch !== undefined) user.branch = branch;
     if (section !== undefined) user.section = section;
+
+    // Mark academic info as set if branch or section is being set
+    if ((branch !== undefined && branch !== null) || (section !== undefined && section !== null)) {
+      user.academicInfoSet = true;
+    }
 
     await user.save();
 
@@ -366,7 +379,8 @@ exports.updateProfile = async (req, res) => {
         role: user.role,
         year: user.year,
         branch: user.branch,
-        section: user.section
+        section: user.section,
+        academicInfoSet: user.academicInfoSet
       }
     });
   } catch (err) {

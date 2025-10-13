@@ -32,8 +32,17 @@ router.put('/requests/:requestId', auth, requireRole(['coordinator']), clubContr
 // GET /api/clubs/:id
 router.get('/:id', clubController.getClubById);
 
+// PUT /api/clubs/:id - Update club information (coordinator only)
+router.put('/:id', auth, requireRole(['coordinator']), clubController.updateClub);
+
 // GET /api/clubs/:id/members - Get all members of a club
 router.get('/:id/members', clubController.getClubMembers);
+
+// POST /api/clubs/:id/invite - Invite a new member to the club (coordinator only)
+router.post('/:id/invite', auth, requireRole(['coordinator']), clubController.inviteMember);
+
+// DELETE /api/clubs/:id/members/:memberId - Remove a member from the club (coordinator only)
+router.delete('/:id/members/:memberId', auth, requireRole(['coordinator']), clubController.removeMember);
 
 // Enrollment controls
 router.post('/:clubId/toggle-enrollment', auth, clubController.toggleEnrollment);

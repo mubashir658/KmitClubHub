@@ -12,7 +12,6 @@ const CoordinatorDashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [membershipRequests, setMembershipRequests] = useState([])
-  const [clubMembers, setClubMembers] = useState([])
   const [clubEvents, setClubEvents] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -32,11 +31,8 @@ const CoordinatorDashboard = () => {
       }
 
       // Fetch all required data in parallel
-      const [requestsRes, membersRes, eventsRes] = await Promise.all([
+      const [requestsRes, eventsRes] = await Promise.all([
         axios.get(`/api/clubs/requests/pending`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }),
-        axios.get(`/api/clubs/${clubId}/members`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }),
         axios.get(`/api/events/coordinator/my-events`, {
@@ -45,13 +41,11 @@ const CoordinatorDashboard = () => {
       ])
 
       setMembershipRequests(requestsRes.data)
-      setClubMembers(membersRes.data)
       setClubEvents(eventsRes.data)
     } catch (error) {
       console.error("Error fetching data:", error)
       // Set empty arrays on error to avoid undefined errors
       setMembershipRequests([])
-      setClubMembers([])
       setClubEvents([])
     } finally {
       setLoading(false)
@@ -87,12 +81,12 @@ const CoordinatorDashboard = () => {
           <p>Pending Requests</p>
         </div>
         <div className={styles.statCard}>
-          <h3>{clubMembers.length}</h3>
-          <p>Club Members</p>
-        </div>
-        <div className={styles.statCard}>
           <h3>{clubEvents.length}</h3>
           <p>Club Events</p>
+        </div>
+        <div className={styles.statCard}>
+          <h3>Active</h3>
+          <p>Club Status</p>
         </div>
       </div>
 
@@ -104,7 +98,7 @@ const CoordinatorDashboard = () => {
             <div className={styles.cardIcon}>🏢</div>
           </div>
         </div>
-        <Link to="/coordinator/members" className={styles.functionCard}>
+        <Link to="/coordinator/users" className={styles.functionCard}>
           <div className={styles.cardContent}>
             <h3>Member Management</h3>
             <p>View and manage club members</p>

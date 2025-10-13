@@ -54,6 +54,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  // Track if academic info has been set (for one-time restriction)
+  academicInfoSet: {
+    type: Boolean,
+    default: false
+  },
   clubs: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Club' 

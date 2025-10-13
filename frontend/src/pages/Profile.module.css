@@ -202,6 +202,11 @@
   font-size: 0.85rem;
 }
 
+.warningText {
+  color: #e74c3c !important;
+  font-weight: 500;
+}
+
 .imagePreview {
   margin-top: 1rem;
   text-align: center;

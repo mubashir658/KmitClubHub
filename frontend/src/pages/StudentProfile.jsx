@@ -15,6 +15,7 @@ const StudentProfile = () => {
     section: "",
     profilePhoto: ""
   })
+  const [academicInfoSet, setAcademicInfoSet] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
@@ -30,6 +31,7 @@ const StudentProfile = () => {
         section: user.section || "",
         profilePhoto: user.profilePhoto || ""
       })
+      setAcademicInfoSet(user.academicInfoSet || false)
     }
   }, [user])
 
@@ -78,7 +80,7 @@ const StudentProfile = () => {
     setError("")
 
     try {
-      // Update basic profile info (name, profilePhoto)
+      // Update basic profile info (name, profilePhoto) - can be updated multiple times
       if (formData.name !== user.name || formData.profilePhoto !== user.profilePhoto) {
         await axios.put("/api/users/profile", {
           name: formData.name,
@@ -86,14 +88,22 @@ const StudentProfile = () => {
         })
       }
 
-      // Update academic info (year, branch, section)
+      // Update academic info (year can be updated multiple times, branch/section only once)
       const academicUpdate = {}
       if (formData.year !== user.year) academicUpdate.year = formData.year
-      if (formData.branch !== user.branch) academicUpdate.branch = formData.branch
-      if (formData.section !== user.section) academicUpdate.section = formData.section
+      
+      // Only allow branch/section updates if academic info hasn't been set yet
+      if (!academicInfoSet) {
+        if (formData.branch !== user.branch) academicUpdate.branch = formData.branch
+        if (formData.section !== user.section) academicUpdate.section = formData.section
+      }
 
       if (Object.keys(academicUpdate).length > 0) {
-        await axios.put("/api/auth/update-profile", academicUpdate)
+        const response = await axios.put("/api/auth/update-profile", academicUpdate)
+        // Update academicInfoSet if it was changed in the response
+        if (response.data.user && response.data.user.academicInfoSet !== undefined) {
+          setAcademicInfoSet(response.data.user.academicInfoSet)
+        }
       }
 
       setMessage("Profile updated successfully!")
@@ -105,7 +115,8 @@ const StudentProfile = () => {
         year: formData.year,
         branch: formData.branch,
         section: formData.section,
-        profilePhoto: formData.profilePhoto
+        profilePhoto: formData.profilePhoto,
+        academicInfoSet: academicInfoSet
       })
 
     } catch (err) {
@@ -284,12 +295,19 @@ const StudentProfile = () => {
                 name="branch"
                 value={formData.branch}
                 onChange={handleChange}
+                disabled={academicInfoSet}
+                className={academicInfoSet ? styles.disabledInput : ""}
               >
                 <option value="">Select Branch</option>
                 {branchOptions.map(branch => (
                   <option key={branch} value={branch}>{branch}</option>
                 ))}
               </select>
+              {academicInfoSet && (
+                <small className={styles.warningText}>
+                  Branch cannot be changed after first update
+                </small>
+              )}
             </div>
 
             <div className={styles.formGroup}>
@@ -299,12 +317,19 @@ const StudentProfile = () => {
                 name="section"
                 value={formData.section}
                 onChange={handleChange}
+                disabled={academicInfoSet}
+                className={academicInfoSet ? styles.disabledInput : ""}
               >
                 <option value="">Select Section</option>
                 {sectionOptions.map(section => (
                   <option key={section} value={section}>{section}</option>
                 ))}
               </select>
+              {academicInfoSet && (
+                <small className={styles.warningText}>
+                  Section cannot be changed after first update
+                </small>
+              )}
             </div>
           </div>
 

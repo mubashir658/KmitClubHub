@@ -7,11 +7,18 @@ import styles from "./Dashboard.module.css"
 const CoordinatorMembers = () => {
   const { user } = useAuth()
   const [club, setClub] = useState(null)
-  const [members, setMembers] = useState([])
   const [leaveRequests, setLeaveRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    logoUrl: '',
+    category: '',
+    instagram: ''
+  })
 
   useEffect(() => {
     fetchClubData()
@@ -57,10 +64,6 @@ const CoordinatorMembers = () => {
       }
       
       setClub(coordinatorClub)
-      
-      // Get members of this club
-      const membersResponse = await axios.get(`http://localhost:5000/api/clubs/${coordinatorClub._id}/members`)
-      setMembers(membersResponse.data)
       
       // Try to get leave requests (optional - don't fail if this doesn't work)
       try {
@@ -112,6 +115,43 @@ const CoordinatorMembers = () => {
     } catch (error) {
       console.error('Leave request handling error:', error)
       alert(error.response?.data?.message || `Failed to ${action} leave request`)
+    }
+  }
+
+  const handleEditClub = () => {
+    setEditForm({
+      name: club.name || '',
+      description: club.description || '',
+      logoUrl: club.logoUrl || '',
+      category: club.category || '',
+      instagram: club.instagram || ''
+    })
+    setShowEditModal(true)
+  }
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSaveClub = async () => {
+    setUpdating(true)
+    try {
+      const response = await axios.put(`http://localhost:5000/api/clubs/${club._id}`, editForm, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
+      
+      setClub(response.data.club)
+      setShowEditModal(false)
+      alert('Club information updated successfully!')
+    } catch (error) {
+      console.error('Club update error:', error)
+      alert(error.response?.data?.message || 'Failed to update club information')
+    } finally {
+      setUpdating(false)
     }
   }
 
@@ -183,20 +223,21 @@ const CoordinatorMembers = () => {
           </div>
           
           <div className={styles.clubActions}>
-            <div className={styles.enrollmentStatus}>
-              <span className={styles.statusLabel}>Enrollment Status:</span>
-              <span className={`${styles.status} ${club.enrollmentOpen ? styles.active : styles.inactive}`}>
-                {club.enrollmentOpen ? 'Active' : 'Inactive'}
-              </span>
-            </div>
-            
             <button
-              className={`${styles.toggleBtn} ${club.enrollmentOpen ? styles.deactivate : styles.activate}`}
-              onClick={toggleEnrollment}
-              disabled={updating}
+              className={styles.editBtn}
+              onClick={handleEditClub}
+              style={{ 
+                background: '#3498db', 
+                color: 'white', 
+                border: 'none', 
+                padding: '0.75rem 1.5rem', 
+                borderRadius: '8px', 
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: '500'
+              }}
             >
-              {updating ? 'Updating...' : 
-               club.enrollmentOpen ? 'Deactivate Enrollment' : 'Activate Enrollment'}
+              Edit Club Information
             </button>
           </div>
         </div>
@@ -243,27 +284,123 @@ const CoordinatorMembers = () => {
         </div>
       )}
 
-      {/* Members List */}
-      <div className={styles.section}>
-        <h2>Club Members ({members.length})</h2>
-        {members.length > 0 ? (
-          <div className={styles.membersGrid}>
-            {members.map((member) => (
-              <div key={member._id} className={styles.memberCard}>
-                <div className={styles.memberInfo}>
-                  <h4>{member.name}</h4>
-                  <p>Roll No: {member.rollNo}</p>
-                  <p>Branch: {member.branch}</p>
-                  <p>Year: {member.year}</p>
-                  <p>Email: {member.email}</p>
+      {/* Edit Club Modal */}
+      {showEditModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <h2 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>
+              Edit Club Information
+            </h2>
+            
+            <div className={styles.formContainer}>
+              <div className={styles.form}>
+                <div className={styles.formGroup}>
+                  <label>Club Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleEditFormChange}
+                    placeholder="Enter club name"
+                    className={styles.formControl}
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Description *</label>
+                  <textarea
+                    name="description"
+                    value={editForm.description}
+                    onChange={handleEditFormChange}
+                    placeholder="Enter club description"
+                    className={styles.formControl}
+                    rows="3"
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Logo URL</label>
+                  <input
+                    type="url"
+                    name="logoUrl"
+                    value={editForm.logoUrl}
+                    onChange={handleEditFormChange}
+                    placeholder="Enter logo URL"
+                    className={styles.formControl}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Category</label>
+                  <select
+                    name="category"
+                    value={editForm.category}
+                    onChange={handleEditFormChange}
+                    className={styles.formControl}
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Technical">Technical</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Academic">Academic</option>
+                    <option value="Social">Social</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Instagram Handle</label>
+                  <input
+                    type="text"
+                    name="instagram"
+                    value={editForm.instagram}
+                    onChange={handleEditFormChange}
+                    placeholder="@instagram_handle"
+                    className={styles.formControl}
+                  />
                 </div>
               </div>
-            ))}
+
+              <div className={styles.formActions}>
+                <button 
+                  onClick={() => setShowEditModal(false)} 
+                  className={styles.cancelBtn}
+                  disabled={updating}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveClub} 
+                  className={styles.submitBtn}
+                  disabled={updating}
+                >
+                  {updating ? 'Updating...' : 'Update Club'}
+                </button>
+              </div>
+            </div>
           </div>
-        ) : (
-          <p>No members found for this club.</p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

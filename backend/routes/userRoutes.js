@@ -55,6 +55,56 @@ router.post('/', auth, requireRole('admin'), async (req, res) => {
   }
 });
 
+// Get user profile
+router.get('/profile', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-passwordHash').populate('coordinatingClub', 'name');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// Update user profile
+router.put('/profile', auth, async (req, res) => {
+  try {
+    console.log('Profile update request received:', {
+      userId: req.user.userId,
+      body: req.body
+    });
+    
+    const { name, profilePhoto, phone, department } = req.body;
+    
+    // Build update object with only provided fields
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+    if (phone !== undefined) updateData.phone = phone;
+    if (department !== undefined) updateData.department = department;
+    
+    console.log('Update data:', updateData);
+    
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      updateData,
+      { new: true }
+    ).select('-passwordHash').populate('coordinatingClub', 'name');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    console.log('Updated user:', user);
+    res.json(user);
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // Get user by ID (admin only)
 router.get('/:id', auth, requireRole('admin'), async (req, res) => {
   try {
@@ -145,56 +195,6 @@ router.delete('/:id', auth, requireRole('admin'), async (req, res) => {
     await User.findByIdAndDelete(userId);
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// Get user profile
-router.get('/profile', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId).select('-passwordHash').populate('coordinatingClub', 'name');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-// Update user profile
-router.put('/profile', auth, async (req, res) => {
-  try {
-    console.log('Profile update request received:', {
-      userId: req.user.userId,
-      body: req.body
-    });
-    
-    const { name, profilePhoto, phone, department } = req.body;
-    
-    // Build update object with only provided fields
-    const updateData = {};
-    if (name !== undefined) updateData.name = name;
-    if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
-    if (phone !== undefined) updateData.phone = phone;
-    if (department !== undefined) updateData.department = department;
-    
-    console.log('Update data:', updateData);
-    
-    const user = await User.findByIdAndUpdate(
-      req.user.userId,
-      updateData,
-      { new: true }
-    ).select('-passwordHash').populate('coordinatingClub', 'name');
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    console.log('Updated user:', user);
-    res.json(user);
-  } catch (err) {
-    console.error('Profile update error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });

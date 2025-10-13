@@ -17,18 +17,6 @@ const CoordinatorProfile = () => {
     newPassword: "",
     confirmPassword: ""
   })
-  const [stats, setStats] = useState({
-    totalEvents: 0,
-    approvedEvents: 0,
-    pendingEvents: 0,
-    feedbackReceived: 0
-  })
-  const [clubInfo, setClubInfo] = useState({
-    name: "",
-    mission: "",
-    memberCount: 0
-  })
-  const [recentActivities, setRecentActivities] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
@@ -43,13 +31,10 @@ const CoordinatorProfile = () => {
         department: user.department || "",
         profilePhoto: user.profilePhoto || ""
       })
-      fetchStats()
-      fetchClubInfo()
-      fetchRecentActivities()
     }
   }, [user])
 
-  // Also fetch fresh user data when component mounts
+  // Fetch fresh user data when component mounts
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -64,81 +49,6 @@ const CoordinatorProfile = () => {
       fetchUserProfile()
     }
   }, [])
-
-  const fetchStats = async () => {
-    try {
-      const [eventsRes, feedbackRes] = await Promise.all([
-        axios.get("/api/events/coordinator/my-events"),
-        axios.get("/api/feedback/coordinator")
-      ])
-
-      const events = eventsRes.data
-      const approvedEvents = events.filter(event => event.status === 'approved').length
-      const pendingEvents = events.filter(event => event.status === 'pending').length
-
-      setStats({
-        totalEvents: events.length,
-        approvedEvents,
-        pendingEvents,
-        feedbackReceived: feedbackRes.data.length
-      })
-    } catch (error) {
-      console.error("Error fetching stats:", error)
-    }
-  }
-
-  const fetchClubInfo = async () => {
-    try {
-      if (user.coordinatingClub) {
-        const res = await axios.get(`/api/clubs/${user.coordinatingClub}`)
-        const club = res.data
-        setClubInfo({
-          name: club.name,
-          mission: club.description || "No mission statement available",
-          memberCount: club.members ? club.members.length : 0
-        })
-      }
-    } catch (error) {
-      console.error("Error fetching club info:", error)
-    }
-  }
-
-  const fetchRecentActivities = async () => {
-    try {
-      const [eventsRes, pollsRes] = await Promise.all([
-        axios.get("/api/events/coordinator/my-events"),
-        axios.get("/api/polls/coordinator/my-polls")
-      ])
-
-      const activities = []
-      
-      // Add recent events
-      eventsRes.data.slice(0, 3).forEach(event => {
-        activities.push({
-          type: "event",
-          title: `Created event: ${event.title}`,
-          date: new Date(event.createdAt).toLocaleDateString(),
-          icon: "📅"
-        })
-      })
-
-      // Add recent polls
-      pollsRes.data.slice(0, 2).forEach(poll => {
-        activities.push({
-          type: "poll",
-          title: `Created poll: ${poll.question}`,
-          date: new Date(poll.createdAt).toLocaleDateString(),
-          icon: "📊"
-        })
-      })
-
-      // Sort by date and take latest 5
-      activities.sort((a, b) => new Date(b.date) - new Date(a.date))
-      setRecentActivities(activities.slice(0, 5))
-    } catch (error) {
-      console.error("Error fetching recent activities:", error)
-    }
-  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -278,8 +188,8 @@ const CoordinatorProfile = () => {
   return (
     <div className={styles.profileContainer}>
       <div className={styles.profileHeader}>
-        <h1>🧾 My Profile</h1>
-        <p>Manage your coordinator profile and view your statistics</p>
+        <h1>Coordinator Profile</h1>
+        <p>Manage your profile information and security settings</p>
       </div>
 
       {message && <div className={styles.successMessage}>{message}</div>}
@@ -300,34 +210,10 @@ const CoordinatorProfile = () => {
             </div>
             <div className={styles.avatarInfo}>
               <h3>{formData.name}</h3>
-              <p>{clubInfo.name}</p>
               <p>{formData.email}</p>
               <p>{formData.phone || "No phone number"}</p>
               <p>{formData.department || "No department"}</p>
               <span className={styles.roleBadge}>Coordinator</span>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className={styles.quickStats}>
-            <h4>Quick Stats</h4>
-            <div className={styles.statsGrid}>
-              <div className={styles.statItem}>
-                <span className={styles.statNumber}>{stats.totalEvents}</span>
-                <span className={styles.statLabel}>Total Events</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statNumber}>{stats.approvedEvents}</span>
-                <span className={styles.statLabel}>Approved</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statNumber}>{stats.pendingEvents}</span>
-                <span className={styles.statLabel}>Pending</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statNumber}>{stats.feedbackReceived}</span>
-                <span className={styles.statLabel}>Feedback</span>
-              </div>
             </div>
           </div>
         </div>
@@ -348,25 +234,13 @@ const CoordinatorProfile = () => {
             >
               Change Password
             </button>
-            <button 
-              className={`${styles.tabButton} ${activeTab === 'club' ? styles.active : ''}`}
-              onClick={() => setActiveTab('club')}
-            >
-              Club Info
-            </button>
-            <button 
-              className={`${styles.tabButton} ${activeTab === 'activities' ? styles.active : ''}`}
-              onClick={() => setActiveTab('activities')}
-            >
-              Recent Activities
-            </button>
           </div>
 
           {/* Tab Content */}
           <div className={styles.tabContent}>
             {activeTab === 'profile' && (
               <form onSubmit={handleProfileUpdate} className={styles.profileForm}>
-                <h3>Edit My Profile</h3>
+                <h3>Edit Profile Information</h3>
                 
                 <div className={styles.formGroup}>
                   <label htmlFor="name">Full Name</label>
@@ -505,52 +379,6 @@ const CoordinatorProfile = () => {
                   </button>
                 </div>
               </form>
-            )}
-
-            {activeTab === 'club' && (
-              <div className={styles.clubInfo}>
-                <h3>Club Information</h3>
-                <div className={styles.clubDetails}>
-                  <div className={styles.clubItem}>
-                    <h4>Club Name</h4>
-                    <p>{clubInfo.name}</p>
-                  </div>
-                  <div className={styles.clubItem}>
-                    <h4>Mission</h4>
-                    <p>{clubInfo.mission}</p>
-                  </div>
-                  <div className={styles.clubItem}>
-                    <h4>Members Count</h4>
-                    <p>{clubInfo.memberCount} members</p>
-                  </div>
-                </div>
-                <div className={styles.clubActions}>
-                  <button className={styles.viewClubButton}>
-                    View Public Profile
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'activities' && (
-              <div className={styles.activities}>
-                <h3>Recent Activities</h3>
-                {recentActivities.length > 0 ? (
-                  <div className={styles.activitiesList}>
-                    {recentActivities.map((activity, index) => (
-                      <div key={index} className={styles.activityItem}>
-                        <span className={styles.activityIcon}>{activity.icon}</span>
-                        <div className={styles.activityContent}>
-                          <p className={styles.activityTitle}>{activity.title}</p>
-                          <p className={styles.activityDate}>{activity.date}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p>No recent activities found.</p>
-                )}
-              </div>
             )}
           </div>
         </div>

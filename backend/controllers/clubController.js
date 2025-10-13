@@ -14,6 +14,53 @@ exports.getClubById = async (req, res) => {
   }
 };
 
+// Update club information (coordinator only)
+exports.updateClub = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, logoUrl, category, instagram, teamHeads, eventsConducted, upcomingEvents } = req.body;
+    const { coordinatingClub } = req.user;
+
+    // Check if coordinator is assigned to this club
+    if (!coordinatingClub || String(coordinatingClub) !== String(id)) {
+      return res.status(403).json({ message: 'You can only update your assigned club' });
+    }
+
+    const club = await Club.findById(id);
+    if (!club) {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+
+    // Update allowed fields
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+    if (category !== undefined) updateData.category = category;
+    if (instagram !== undefined) updateData.instagram = instagram;
+    if (teamHeads !== undefined) updateData.teamHeads = teamHeads;
+    if (eventsConducted !== undefined) updateData.eventsConducted = eventsConducted;
+    if (upcomingEvents !== undefined) updateData.upcomingEvents = upcomingEvents;
+
+    const updatedClub = await Club.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    res.json({ message: 'Club updated successfully', club: updatedClub });
+  } catch (err) {
+    console.error('Update club error:', err);
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Validation error', error: err.message });
+    }
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'Club name already exists' });
+    }
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 // Get all members of a club
 exports.getClubMembers = async (req, res) => {
   try {
@@ -384,6 +431,103 @@ exports.handleLeaveRequest = async (req, res) => {
     res.json({ message });
   } catch (err) {
     console.error('Handle leave request error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Invite a new member to the club (coordinator only)
+exports.inviteMember = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, rollNo, year, branch, section, password } = req.body;
+    const { coordinatingClub } = req.user;
+
+    // Check if coordinator is assigned to this club
+    if (!coordinatingClub || String(coordinatingClub) !== String(id)) {
+      return res.status(403).json({ message: 'You can only invite members to your assigned club' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { rollNo }] 
+    });
+
+    if (existingUser) {
+      // If user exists, check if they're already in the club
+      if (existingUser.clubs.includes(id)) {
+        return res.status(400).json({ message: 'User is already a member of this club' });
+      }
+      
+      // Add user to club
+      existingUser.clubs.push(id);
+      await existingUser.save();
+      
+      return res.json({ 
+        message: 'Existing user added to club successfully', 
+        member: existingUser 
+      });
+    }
+
+    // Create new user
+    const newUser = new User({
+      name,
+      email,
+      rollNo,
+      year: year ? parseInt(year) : undefined,
+      branch,
+      section,
+      password,
+      role: 'student',
+      clubs: [id]
+    });
+
+    await newUser.save();
+
+    res.json({ 
+      message: 'New member invited and added to club successfully', 
+      member: newUser 
+    });
+  } catch (err) {
+    console.error('Invite member error:', err);
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Validation error', error: err.message });
+    }
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'User with this email or roll number already exists' });
+    }
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Remove a member from the club (coordinator only)
+exports.removeMember = async (req, res) => {
+  try {
+    const { id, memberId } = req.params;
+    const { coordinatingClub } = req.user;
+
+    // Check if coordinator is assigned to this club
+    if (!coordinatingClub || String(coordinatingClub) !== String(id)) {
+      return res.status(403).json({ message: 'You can only remove members from your assigned club' });
+    }
+
+    // Find the user
+    const user = await User.findById(memberId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if user is actually in the club
+    if (!user.clubs.includes(id)) {
+      return res.status(400).json({ message: 'User is not a member of this club' });
+    }
+
+    // Remove user from club
+    user.clubs = user.clubs.filter(clubId => String(clubId) !== String(id));
+    await user.save();
+
+    res.json({ message: 'Member removed from club successfully' });
+  } catch (err) {
+    console.error('Remove member error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
