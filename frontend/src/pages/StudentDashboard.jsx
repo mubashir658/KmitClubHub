@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { Routes, Route, Link, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { useToast } from "../context/ToastContext"
 import axios from "axios"
 import EventCard from "../components/EventCard"
 import styles from "./Dashboard.module.css"
@@ -10,12 +11,17 @@ import StudentPolls from "./StudentPolls"
 
 const StudentDashboard = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useToast()
   const location = useLocation()
   const [clubs, setClubs] = useState([])
   const [events, setEvents] = useState([])
   const [myEvents, setMyEvents] = useState([])
   const [hasNewEvent, setHasNewEvent] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [lastEventCheck, setLastEventCheck] = useState(() => {
+    const stored = localStorage.getItem('lastEventCheck')
+    return stored || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // Default to 24 hours ago
+  })
 
   useEffect(() => {
     fetchData()
@@ -28,20 +34,25 @@ const StudentDashboard = () => {
       setClubs(clubsRes.data)
       setEvents(eventsRes.data)
 
-      // Filter events for clubs the user has joined
+      console.log('StudentDashboard - All events:', eventsRes.data);
+      console.log('StudentDashboard - Sample event with imageUrl:', eventsRes.data.find(e => e.imageUrl));
+
+      // Filter events for clubs the user has joined + admin events for all clubs
       const userClubIds = user.joinedClubs?.map((club) => club._id) || []
-      const userEvents = eventsRes.data.filter((event) => userClubIds.includes(event.club._id))
+      const userEvents = eventsRes.data.filter((event) => 
+        userClubIds.includes(event.club?._id) || event.isForAllClubs
+      )
+      console.log('StudentDashboard - Filtered user events:', userEvents);
       setMyEvents(userEvents)
 
-      // New event indicator: check if any event is within last 48 hours or future new
-      const now = new Date()
-      const recentThreshold = new Date(now.getTime() - 48 * 60 * 60 * 1000)
-      const hasRecentOrNewUpcoming = eventsRes.data.some(ev => {
-        const createdAt = ev.createdAt ? new Date(ev.createdAt) : null
-        const eventDate = new Date(ev.date)
-        return (createdAt && createdAt >= recentThreshold) || (eventDate > now && createdAt && createdAt >= recentThreshold)
+      // Check for new events since last check
+      const lastCheck = new Date(lastEventCheck)
+      const hasNewEvents = userEvents.some(event => {
+        if (!event.createdAt) return false
+        const eventCreatedAt = new Date(event.createdAt)
+        return eventCreatedAt > lastCheck
       })
-      setHasNewEvent(hasRecentOrNewUpcoming)
+      setHasNewEvent(hasNewEvents)
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
@@ -52,10 +63,10 @@ const StudentDashboard = () => {
   const handleEventRegister = async (eventId) => {
     try {
       await axios.post(`/api/events/${eventId}/register`)
-      alert("Successfully registered for event!")
+      showSuccess("Successfully registered for event!")
       fetchData() // Refresh data
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to register for event")
+      showError(error.response?.data?.message || "Failed to register for event")
     }
   }
 
@@ -94,15 +105,28 @@ const StudentDashboard = () => {
           </div>
         </Link>
 
-        <Link to="/student/calendar" className={styles.functionCard}>
+        <Link to="/student/calendar" className={styles.functionCard} style={{ position: 'relative' }}>
           <div className={styles.cardContent}>
             <h3>Event Calendar</h3>
             <p>Browse and register for events</p>
             <div className={styles.cardIcon}>
               📅
-              {hasNewEvent && <span style={{ marginLeft: '8px', display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#28a745', borderRadius: '50%' }}></span>}
             </div>
           </div>
+          {hasNewEvent && (
+            <span style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              width: '16px',
+              height: '16px',
+              backgroundColor: '#d32f2f',
+              borderRadius: '50%',
+              border: '2px solid white',
+              boxShadow: '0 0 0 1px #d32f2f, 0 2px 4px rgba(0,0,0,0.3)',
+              zIndex: 10
+            }}></span>
+          )}
         </Link>
 
         <Link to="/student/feedback" className={styles.functionCard}>

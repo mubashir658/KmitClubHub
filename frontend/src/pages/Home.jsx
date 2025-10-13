@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import ClubCard from "../components/ClubCard"
+import { useToast } from "../context/ToastContext"
 import styles from "./Home.module.css"
 import axios from "axios"
 
@@ -13,6 +14,7 @@ const imageList = [
 ]
 
 const Home = () => {
+  const { showError } = useToast()
   // Slideshow logic
   const [current, setCurrent] = useState(0)
   const timeoutRef = useRef(null)
@@ -35,21 +37,45 @@ const Home = () => {
     return () => clearTimeout(timeoutRef.current)
   }, [current])
 
-  // Fetch clubs from backend
+  // Fetch clubs and statistics from backend
   useEffect(() => {
-    const fetchClubs = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/clubs')
-        setClubs(response.data)
-        setStats(prev => ({ ...prev, clubs: response.data.length }))
+        const [clubsRes, usersRes, eventsRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/clubs'),
+          axios.get('http://localhost:5000/api/users'),
+          axios.get('http://localhost:5000/api/events')
+        ])
+        
+        setClubs(clubsRes.data)
+        
+        // Calculate active members (students who have joined at least one club)
+        const activeMembers = usersRes.data.filter(user => 
+          user.role === 'student' && user.clubs && user.clubs.length > 0
+        ).length
+        
+        // Calculate events this year
+        const currentYear = new Date().getFullYear()
+        const eventsThisYear = eventsRes.data.filter(event => {
+          const eventDate = new Date(event.date)
+          return eventDate.getFullYear() === currentYear
+        }).length
+        
+        setStats({
+          clubs: clubsRes.data.length,
+          members: activeMembers,
+          events: eventsThisYear
+        })
       } catch (error) {
-        console.error('Error fetching clubs:', error)
+        console.error('Failed to load statistics data:', error)
+        // Set default stats to avoid UI errors
+        setStats({ clubs: 0, members: 0, events: 0 })
       } finally {
         setLoading(false)
       }
     }
 
-    fetchClubs()
+    fetchData()
   }, [])
 
   return (

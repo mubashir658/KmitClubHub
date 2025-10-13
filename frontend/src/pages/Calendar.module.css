@@ -19,6 +19,53 @@
   font-size: 1.1rem;
 }
 
+.headerActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  gap: 20px;
+}
+
+.markSeenBtn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.markSeenBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.notificationControls {
+  display: flex;
+  gap: 10px;
+}
+
+.resetBtn {
+  background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.resetBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
 .viewToggle {
   display: inline-flex;
   gap: 10px;
@@ -139,6 +186,27 @@
   font-weight: 600;
   color: #2c3e50;
   margin-bottom: 5px;
+  position: relative;
+}
+
+.newEventDay {
+  color: #e74c3c !important;
+  font-weight: 700;
+}
+
+.newEventIndicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  color: #e74c3c;
+  font-size: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 .emptyDay {
@@ -161,6 +229,11 @@
   margin-bottom: 2px;
   cursor: pointer;
   position: relative;
+}
+
+.newEvent {
+  background: #e74c3c !important;
+  animation: pulse 2s infinite;
 }
 
 .eventDot:hover .eventTitle {
@@ -213,6 +286,15 @@
   background: #f8f9fa;
 }
 
+.newEventItem {
+  border-color: #e74c3c !important;
+  background: #fdf2f2 !important;
+}
+
+.newEventItem:hover {
+  background: #fce8e8 !important;
+}
+
 .eventDate {
   background: #667eea;
   color: white;
@@ -223,6 +305,20 @@
   margin-right: 15px;
   min-width: 80px;
   text-align: center;
+  position: relative;
+}
+
+.newEventBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #e74c3c;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  animation: pulse 2s infinite;
 }
 
 .eventDetails h4 {
@@ -341,6 +437,12 @@
   padding-bottom: 16px;
 }
 
+.modalHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .modalHeader h3 {
   margin: 0;
   color: #333;
@@ -366,6 +468,28 @@
 .closeBtn:hover {
   background: #f8f9fa;
   color: #333;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.deleteBtn:hover {
+  background-color: #f8d7da;
+  color: #721c24;
+  transform: scale(1.1);
 }
 
 .modalContent {

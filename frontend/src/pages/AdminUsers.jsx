@@ -27,12 +27,15 @@ const AdminUsers = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
   const [branchFilter, setBranchFilter] = useState('all');
+  const [clubFilter, setClubFilter] = useState('all');
+  const [clubs, setClubs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
 
-  // Fetch users on component mount
+  // Fetch users and clubs on component mount
   useEffect(() => {
     fetchUsers();
+    fetchClubs();
   }, []);
 
   // Filter users when search term or filters change
@@ -63,9 +66,18 @@ const AdminUsers = () => {
       filtered = filtered.filter(user => user.branch && user.branch.toLowerCase() === branchFilter.toLowerCase());
     }
 
+    // Filter by club
+    if (clubFilter !== 'all') {
+      filtered = filtered.filter(user => 
+        user.role === 'student' && 
+        user.clubs && 
+        user.clubs.includes(clubFilter)
+      );
+    }
+
     setFilteredUsers(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [users, searchTerm, roleFilter, yearFilter, branchFilter]);
+  }, [users, searchTerm, roleFilter, yearFilter, branchFilter, clubFilter]);
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -79,6 +91,16 @@ const AdminUsers = () => {
       setError('Failed to load users. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Fetch all clubs
+  const fetchClubs = async () => {
+    try {
+      const response = await axios.get('/api/clubs');
+      setClubs(response.data);
+    } catch (err) {
+      console.error('Error fetching clubs:', err);
     }
   };
 
@@ -376,9 +398,20 @@ const AdminUsers = () => {
               </button>
             )}
           </div>
-          <button onClick={handleAddUser} className={styles.submitBtn}>
-            + Add New User
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <label style={{ fontWeight: 'bold' }}>According to Club:</label>
+            <select
+              value={clubFilter}
+              onChange={(e) => setClubFilter(e.target.value)}
+              className={styles.formControl}
+              style={{ minWidth: '200px' }}
+            >
+              <option value="all">All Clubs</option>
+              {clubs.map(club => (
+                <option key={club._id} value={club._id}>{club.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Quick Filter Buttons */}
@@ -500,7 +533,11 @@ const AdminUsers = () => {
                 <div>
                   <strong>{user.name}</strong>
                   <div style={{ fontSize: '0.8rem', color: '#7f8c8d' }}>
-                    {user.coordinatingClub ? `Coordinating: ${user.coordinatingClub.name}` : 'No club assigned'}
+                    {user.role === 'coordinator' && user.coordinatingClub ? 
+                      `Coordinating: ${user.coordinatingClub.name}` : 
+                      user.role === 'student' && user.clubs && user.clubs.length > 0 ? 
+                        `Clubs: ${user.clubs.length}` : 
+                        'No club assigned'}
                   </div>
                 </div>
                 <div>{user.email}</div>
