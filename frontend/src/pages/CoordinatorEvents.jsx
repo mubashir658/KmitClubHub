@@ -20,7 +20,10 @@ const CoordinatorEvents = () => {
     date: "",
     time: "",
     venue: "",
-    imageUrl: ""
+    imageUrl: "",
+    audienceYears: [],
+    audienceBranches: [],
+    registrationOpen: false
   })
   const [imageError, setImageError] = useState("")
   const [submitError, setSubmitError] = useState("")
@@ -270,7 +273,10 @@ const CoordinatorEvents = () => {
       date: formattedDate,
       time: event.time || "",
       venue: event.venue || "",
-      imageUrl: event.imageUrl || ""
+      imageUrl: event.imageUrl || "",
+      audienceYears: event.audienceYears || [],
+      audienceBranches: event.audienceBranches || [],
+      registrationOpen: Boolean(event.registrationOpen)
     }
     
     setFormData(formDataToSet)
@@ -297,7 +303,10 @@ const CoordinatorEvents = () => {
       date: "",
       time: "",
       venue: "",
-      imageUrl: ""
+      imageUrl: "",
+      audienceYears: [],
+      audienceBranches: [],
+      registrationOpen: false
     })
     setShowForm(false)
     setSubmitError("")
@@ -307,34 +316,9 @@ const CoordinatorEvents = () => {
 
   // activate functionality removed per requirements
 
-  const handleDeactivate = async (eventId) => {
-    if (!window.confirm("Deactivate this approved event?")) return
-    try {
-      const response = await axios.put(`/api/events/${eventId}/deactivate`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      })
-      showSuccess("Event deactivated successfully!")
-      fetchEvents()
-    } catch (error) {
-      showError(error.response?.data?.message || "Failed to deactivate event")
-    }
-  }
+  // Deactivate removed per new requirement (coordinators should not reject approved events)
 
-  const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
-      return
-    }
-
-    try {
-      await axios.delete(`/api/events/${eventId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      })
-      showSuccess("Event deleted successfully!")
-      fetchEvents() // Refresh the list
-    } catch (error) {
-      showError(error.response?.data?.message || "Failed to delete event")
-    }
-  }
+  // Delete removed: only admins can delete events
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -478,6 +462,50 @@ const CoordinatorEvents = () => {
                 )}
               </div>
 
+                {/* Audience for analytics */}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Target Years (for analytics)</label>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {[1,2,3,4].map(y => (
+                        <label key={y} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <input
+                            type="checkbox"
+                            checked={formData.audienceYears.includes(y)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                audienceYears: e.target.checked ? [...prev.audienceYears, y] : prev.audienceYears.filter(v => v !== y)
+                              }))
+                            }}
+                          />
+                          {y} year
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Target Branches (for analytics)</label>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {['CSE','CSM','IT','CSD'].map(br => (
+                        <label key={br} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <input
+                            type="checkbox"
+                            checked={formData.audienceBranches.includes(br)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                audienceBranches: e.target.checked ? [...prev.audienceBranches, br] : prev.audienceBranches.filter(v => v !== br)
+                              }))
+                            }}
+                          />
+                          {br}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
               <div className={styles.formGroup}>
                 <label htmlFor="eventImage">Event Image (Optional)</label>
                 <input
@@ -571,77 +599,38 @@ const CoordinatorEvents = () => {
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={() => handleDeleteEvent(event._id)}
-                        className={styles.deleteBtn}
-                        style={{
-                          backgroundColor: '#dc3545',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        🗑️ Delete
-                      </button>
+                      {/* Delete disabled for coordinators */}
                       <span className={styles.pendingNote}>⏳ Waiting for admin approval</span>
                     </div>
                   )}
                   {(event.status === "approved") && (
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span className={styles.approvedNote}>✅ Event approved and live!</span>
-                      <button 
-                        onClick={() => handleDeactivate(event._id)} 
-                        className={styles.deactivateBtn}
-                        style={{
-                          backgroundColor: '#ffc107',
-                          color: '#000',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Deactivate
-                      </button>
+                      <span style={{ fontWeight: 600 }}>Registration: {event.registrationOpen ? 'Open' : 'Closed'}</span>
                       <button
-                        onClick={() => handleDeleteEvent(event._id)}
-                        className={styles.deleteBtn}
-                        style={{
-                          backgroundColor: '#dc3545',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
+                        onClick={async () => {
+                          try {
+                            await axios.put(`/api/events/${event._id}/toggle-registration`, { open: !event.registrationOpen }, {
+                              headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                            })
+                            showSuccess(`Registration ${!event.registrationOpen ? 'opened' : 'closed'} successfully!`)
+                            fetchEvents()
+                          } catch (error) {
+                            showError(error.response?.data?.message || 'Failed to toggle registration')
+                          }
                         }}
+                        className={event.registrationOpen ? styles.rejectBtn : styles.approveBtn}
+                        style={{ padding: '6px 12px', fontSize: '12px' }}
                       >
-                        🗑️ Delete
+                        {event.registrationOpen ? 'Close Registration' : 'Open Registration'}
                       </button>
+                      {/* Delete disabled for coordinators */}
                     </div>
                   )}
                   {(event.status === "rejected") && (
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span className={styles.rejectedNote}>❌ Event was rejected</span>
-                      <button
-                        onClick={() => handleDeleteEvent(event._id)}
-                        className={styles.deleteBtn}
-                        style={{
-                          backgroundColor: '#dc3545',
-                          color: 'white',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        🗑️ Delete
-                      </button>
+                      {/* Delete disabled for coordinators */}
                     </div>
                   )}
                 </div>

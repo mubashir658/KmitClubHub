@@ -77,9 +77,11 @@ const StudentClubs = () => {
     setLeaveReason("")
   }
 
-  const handleJoinClub = async (clubId, clubKey) => {
+  const handleJoinClub = async (clubId) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/clubs/${clubId}/join`, { clubKey })
+      const response = await axios.post(`http://localhost:5000/api/clubs/${clubId}/enroll`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
       showSuccess("Successfully joined the club!")
       
       // Update user context with new club data
@@ -130,6 +132,17 @@ const StudentClubs = () => {
                   <div className={styles.clubInfo}>
                     <h3>{club.name}</h3>
                     <p>{club.description}</p>
+                    
+                    {/* Coordinator Information */}
+                    {club.coordinators && club.coordinators.length > 0 && (
+                      <div className={styles.coordinatorInfo}>
+                        <span className={styles.coordinatorLabel}>Coordinator:</span>
+                        <span className={styles.coordinatorName}>
+                          {club.coordinators.map(coordinator => coordinator.name).join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className={styles.clubStats}>
                       <span className={styles.category}>{club.category}</span>
                       <span className={styles.members}>
@@ -190,6 +203,17 @@ const StudentClubs = () => {
                   <div className={styles.clubInfo}>
                     <h3>{club.name}</h3>
                     <p>{club.description}</p>
+                    
+                    {/* Coordinator Information */}
+                    {club.coordinators && club.coordinators.length > 0 && (
+                      <div className={styles.coordinatorInfo}>
+                        <span className={styles.coordinatorLabel}>Coordinator:</span>
+                        <span className={styles.coordinatorName}>
+                          {club.coordinators.map(coordinator => coordinator.name).join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className={styles.clubStats}>
                       <span className={styles.category}>{club.category}</span>
                       <span className={styles.members}>
@@ -213,12 +237,7 @@ const StudentClubs = () => {
                     <span className={styles.joinedBadge}>Joined</span>
                   ) : isEnrollmentOpen ? (
                     <button
-                      onClick={() => {
-                        const clubKey = prompt(`Enter the club key for ${club.name}:`)
-                        if (clubKey) {
-                          handleJoinClub(club._id, clubKey)
-                        }
-                      }}
+                      onClick={() => handleJoinClub(club._id)}
                       className={styles.joinBtn}
                     >
                       Join Club

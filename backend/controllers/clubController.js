@@ -4,7 +4,8 @@ const LeaveRequest = require('../models/LeaveRequest');
 
 exports.getClubById = async (req, res) => {
   try {
-    const club = await Club.findById(req.params.id);
+    const club = await Club.findById(req.params.id)
+      .populate('coordinators', 'name email rollNo');
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }

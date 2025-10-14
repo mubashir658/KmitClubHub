@@ -28,6 +28,7 @@ import CoordinatorPolls from "./pages/CoordinatorPolls"
 import AdminPolls from "./pages/AdminPolls"
 import CoordinatorEvents from "./pages/CoordinatorEvents"
 import AdminEvents from "./pages/AdminEvents"
+import AdminAnalytics from "./pages/AdminAnalytics"
 import CoordinatorProfile from "./components/CoordinatorProfile"
 import CoordinatorUsers from "./pages/CoordinatorUsers"
 
@@ -99,7 +100,7 @@ function App() {
                       <Route path="users" element={<AdminUsers />} />
                       <Route path="feedback" element={<AdminFeedback />} />
                       <Route path="polls" element={<AdminPolls />} />
-                      <Route path="analytics" element={<AdminDashboard />} />
+                      <Route path="analytics" element={<AdminAnalytics />} />
                     </Routes>
                   </ProtectedRoute>
                 }

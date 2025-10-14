@@ -107,8 +107,13 @@ const EventCard = ({ event, onRegister }) => {
                 Registered ✓
               </button>
             ) : (
-              <button className={styles.registerBtn} onClick={() => onRegister(event._id)}>
-                Register
+              <button 
+                className={styles.registerBtn} 
+                onClick={() => onRegister(event._id)}
+                disabled={!event.registrationOpen}
+                title={!event.registrationOpen ? 'Registration closed' : 'Register for event'}
+              >
+                {event.registrationOpen ? 'Register' : 'Registration Closed'}
               </button>
             )}
           </div>

@@ -114,6 +114,16 @@ const ClubDetail = () => {
           <div className={styles.clubInfo}>
             <h1 className={styles.clubName}>{club.name}</h1>
             <p className={styles.clubDescription}>{club.description}</p>
+            
+            {/* Coordinator Information */}
+            {club.coordinators && club.coordinators.length > 0 && (
+              <div className={styles.coordinatorInfo}>
+                <span className={styles.coordinatorLabel}>Coordinator:</span>
+                <span className={styles.coordinatorName}>
+                  {club.coordinators.map(coordinator => coordinator.name).join(', ')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -191,31 +201,57 @@ const ClubDetail = () => {
           </div>
         )}
 
-        {/* Past Events (from fetched events) */}
+        {/* Past Events with images */}
         {pastEvents.length > 0 && (
           <div className={styles.section}>
             <h2>Past Events</h2>
-            <ul>
+            <div className={styles.eventsGrid}>
               {pastEvents.map((evt) => (
-                <li key={evt._id}>
-                  {evt.title} — {new Date(evt.date).toLocaleDateString()} @ {evt.venue}
-                </li>
+                <div key={evt._id} className={styles.eventCard}>
+                  <div className={styles.eventImage}>
+                    {evt.imageUrl && evt.imageUrl.trim() !== '' ? (
+                      <img 
+                        src={evt.imageUrl} 
+                        alt={evt.title}
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                      />
+                    ) : null}
+                    <div className={styles.eventPlaceholder} style={{ display: (evt.imageUrl && evt.imageUrl.trim() !== '') ? 'none' : 'flex' }}>📅</div>
+                  </div>
+                  <div className={styles.eventInfoBlock}>
+                    <h4>{evt.title}</h4>
+                    <p className={styles.eventMeta}><span>{new Date(evt.date).toLocaleDateString()}</span> • <span>{evt.time}</span> • <span>{evt.venue}</span></p>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
-        {/* Upcoming Events (from fetched events) */}
+        {/* Upcoming Events with images */}
         {upcomingEvents.length > 0 && (
           <div className={styles.section}>
             <h2>Upcoming Events</h2>
-            <ul>
+            <div className={styles.eventsGrid}>
               {upcomingEvents.map((evt) => (
-                <li key={evt._id}>
-                  {evt.title} — {new Date(evt.date).toLocaleDateString()} @ {evt.venue}
-                </li>
+                <div key={evt._id} className={styles.eventCard}>
+                  <div className={styles.eventImage}>
+                    {evt.imageUrl && evt.imageUrl.trim() !== '' ? (
+                      <img 
+                        src={evt.imageUrl} 
+                        alt={evt.title}
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                      />
+                    ) : null}
+                    <div className={styles.eventPlaceholder} style={{ display: (evt.imageUrl && evt.imageUrl.trim() !== '') ? 'none' : 'flex' }}>📅</div>
+                  </div>
+                  <div className={styles.eventInfoBlock}>
+                    <h4>{evt.title}</h4>
+                    <p className={styles.eventMeta}><span>{new Date(evt.date).toLocaleDateString()}</span> • <span>{evt.time}</span> • <span>{evt.venue}</span></p>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>

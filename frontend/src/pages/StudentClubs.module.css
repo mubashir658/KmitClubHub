@@ -113,12 +113,33 @@
 .clubInfo p {
   color: #7f8c8d;
   line-height: 1.5;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   font-size: 0.95rem;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.coordinatorInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+}
+
+.coordinatorLabel {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.coordinatorName {
+  font-weight: 700;
 }
 
 .clubStats {

@@ -39,6 +39,10 @@ const eventSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  registrationOpen: {
+    type: Boolean,
+    default: false
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -52,6 +56,13 @@ const eventSchema = new mongoose.Schema({
   registeredStudents: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  }],
+  audienceYears: [{
+    type: Number,
+    enum: [1, 2, 3, 4]
+  }],
+  audienceBranches: [{
+    type: String
   }],
   createdAt: {
     type: Date,

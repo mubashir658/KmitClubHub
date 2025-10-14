@@ -17,7 +17,8 @@ const CoordinatorMembers = () => {
     description: '',
     logoUrl: '',
     category: '',
-    instagram: ''
+    instagram: '',
+    teamHeads: []
   })
 
   useEffect(() => {
@@ -34,7 +35,7 @@ const CoordinatorMembers = () => {
       // First try to get club using coordinatingClub field
       if (user.coordinatingClub) {
         try {
-          const clubResponse = await axios.get(`http://localhost:5000/api/clubs/${user.coordinatingClub}`)
+          const clubResponse = await axios.get(`/api/clubs/${user.coordinatingClub}`)
           coordinatorClub = clubResponse.data
           console.log('Found club via coordinatingClub field:', coordinatorClub.name)
         } catch (error) {
@@ -47,7 +48,7 @@ const CoordinatorMembers = () => {
         console.log('No coordinatingClub found or invalid, trying alternative approach...')
         
         // Get all clubs and find the one this coordinator manages
-        const clubsResponse = await axios.get('http://localhost:5000/api/clubs')
+        const clubsResponse = await axios.get('/api/clubs')
         coordinatorClub = clubsResponse.data.find(club => 
           club.coordinators && club.coordinators.includes(user._id)
         )
@@ -68,7 +69,7 @@ const CoordinatorMembers = () => {
       // Try to get leave requests (optional - don't fail if this doesn't work)
       try {
         console.log("Fetching leave requests...")
-        const leaveRequestsResponse = await axios.get(`http://localhost:5000/api/clubs/leave-requests/pending`)
+        const leaveRequestsResponse = await axios.get(`/api/clubs/leave-requests/pending`)
         console.log("Leave requests response:", leaveRequestsResponse.data)
         setLeaveRequests(leaveRequestsResponse.data)
       } catch (leaveError) {
@@ -88,7 +89,7 @@ const CoordinatorMembers = () => {
   const toggleEnrollment = async () => {
     setUpdating(true)
     try {
-      await axios.post(`http://localhost:5000/api/clubs/${club._id}/toggle-enrollment`, {}, {
+      await axios.post(`/api/clubs/${club._id}/toggle-enrollment`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       
@@ -109,7 +110,7 @@ const CoordinatorMembers = () => {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/clubs/leave-requests/${requestId}`, { action })
+      await axios.put(`/api/clubs/leave-requests/${requestId}`, { action })
       alert(`Leave request ${action}d successfully!`)
       fetchClubData() // Refresh data
     } catch (error) {
@@ -124,7 +125,8 @@ const CoordinatorMembers = () => {
       description: club.description || '',
       logoUrl: club.logoUrl || '',
       category: club.category || '',
-      instagram: club.instagram || ''
+      instagram: club.instagram || '',
+      teamHeads: Array.isArray(club.teamHeads) ? club.teamHeads : []
     })
     setShowEditModal(true)
   }
@@ -137,10 +139,31 @@ const CoordinatorMembers = () => {
     }))
   }
 
+  const addTeamHead = () => {
+    setEditForm(prev => ({
+      ...prev,
+      teamHeads: [...(prev.teamHeads || []), { name: '', rollNumber: '', designation: '' }]
+    }))
+  }
+
+  const updateTeamHead = (index, field, value) => {
+    setEditForm(prev => ({
+      ...prev,
+      teamHeads: prev.teamHeads.map((th, i) => i === index ? { ...th, [field]: value } : th)
+    }))
+  }
+
+  const removeTeamHead = (index) => {
+    setEditForm(prev => ({
+      ...prev,
+      teamHeads: prev.teamHeads.filter((_, i) => i !== index)
+    }))
+  }
+
   const handleSaveClub = async () => {
     setUpdating(true)
     try {
-      const response = await axios.put(`http://localhost:5000/api/clubs/${club._id}`, editForm, {
+      const response = await axios.put(`/api/clubs/${club._id}`, editForm, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       
@@ -239,6 +262,27 @@ const CoordinatorMembers = () => {
             >
               Edit Club Information
             </button>
+            <button
+              onClick={toggleEnrollment}
+              disabled={updating}
+              className={styles.submitBtn}
+              style={{
+                marginLeft: '1rem',
+                background: club.enrollmentOpen ? '#e74c3c' : '#27ae60',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: '500'
+              }}
+            >
+              {updating ? 'Updating...' : club.enrollmentOpen ? 'Deactivate Enrollment' : 'Activate Enrollment'}
+            </button>
+            <span style={{ marginLeft: '0.75rem', alignSelf: 'center', color: club.enrollmentOpen ? '#27ae60' : '#e67e22', fontWeight: 600 }}>
+              Status: {club.enrollmentOpen ? 'Open' : 'Closed'}
+            </span>
           </div>
         </div>
       </div>
@@ -302,7 +346,7 @@ const CoordinatorMembers = () => {
             background: 'white',
             borderRadius: '12px',
             padding: '2rem',
-            maxWidth: '500px',
+            maxWidth: '800px',
             width: '90%',
             maxHeight: '90vh',
             overflow: 'auto'
@@ -378,6 +422,54 @@ const CoordinatorMembers = () => {
                     placeholder="@instagram_handle"
                     className={styles.formControl}
                   />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Team Heads</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {(editForm.teamHeads || []).map((head, idx) => (
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.5rem', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={head.name || ''}
+                          onChange={(e) => updateTeamHead(idx, 'name', e.target.value)}
+                          className={styles.formControl}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Roll Number"
+                          value={head.rollNumber || ''}
+                          onChange={(e) => updateTeamHead(idx, 'rollNumber', e.target.value)}
+                          className={styles.formControl}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Designation"
+                          value={head.designation || ''}
+                          onChange={(e) => updateTeamHead(idx, 'designation', e.target.value)}
+                          className={styles.formControl}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeTeamHead(idx)}
+                          className={styles.deleteBtn}
+                          style={{ padding: '0.6rem 0.9rem' }}
+                          title="Remove team head"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addTeamHead}
+                      className={styles.submitBtn}
+                      style={{ alignSelf: 'flex-start' }}
+                    >
+                      + Add Team Head
+                    </button>
+                  </div>
                 </div>
               </div>
 

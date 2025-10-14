@@ -12,16 +12,22 @@ const AdminEvents = () => {
   const navigate = useNavigate()
   const [pendingEvents, setPendingEvents] = useState([])
   const [allClubsEvents, setAllClubsEvents] = useState([])
+  const [upcomingApproved, setUpcomingApproved] = useState([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState({})
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [editingEvent, setEditingEvent] = useState(null)
+  const [editFormData, setEditFormData] = useState({
+    title: '', description: '', date: '', time: '', venue: '', imageUrl: ''
+  })
   const [createFormData, setCreateFormData] = useState({
     title: '',
     description: '',
     date: '',
     time: '',
     venue: '',
-    imageUrl: ''
+    imageUrl: '',
+    registrationOpen: false
   })
   const [imageError, setImageError] = useState("")
 
@@ -31,20 +37,30 @@ const AdminEvents = () => {
 
   const fetchData = async () => {
     try {
-      const [pendingRes, allClubsRes] = await Promise.all([
+      const [pendingRes, allClubsRes, publicEventsRes] = await Promise.all([
         axios.get("/api/events/admin/pending", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }),
         axios.get("/api/events/admin/all-clubs-events", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        })
+        }),
+        axios.get("/api/events")
       ])
       setPendingEvents(pendingRes.data)
       setAllClubsEvents(allClubsRes.data)
+      // Derive upcoming approved from public events to avoid auth/filters mismatches
+      const today = new Date();
+      today.setHours(0,0,0,0)
+      const upcoming = (publicEventsRes.data || []).filter(ev => {
+        const d = new Date(ev.date)
+        return d >= today
+      })
+      setUpcomingApproved(upcoming)
     } catch (error) {
       console.error("Error fetching events:", error)
       setPendingEvents([])
       setAllClubsEvents([])
+      setUpcomingApproved([])
     } finally {
       setLoading(false)
     }
@@ -251,6 +267,18 @@ const AdminEvents = () => {
             </div>
 
             <div className={styles.formGroup}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={createFormData.registrationOpen}
+                  onChange={(e) => setCreateFormData({ ...createFormData, registrationOpen: e.target.checked })}
+                  style={{ marginRight: '8px' }}
+                />
+                Open registrations immediately
+              </label>
+            </div>
+
+            <div className={styles.formGroup}>
               <label htmlFor="eventImage">Event Image (Optional)</label>
               <input
                 type="file"
@@ -349,11 +377,15 @@ const AdminEvents = () => {
                     </div>
                     <div className={styles.metaRow}>
                       <span>📍 <strong>Venue:</strong> {event.venue}</span>
-                      <span>🏢 <strong>Scope:</strong> All Clubs</span>
+                      <span>🏢 <strong>Scope:</strong> <strong>All Clubs</strong></span>
                     </div>
                     <div className={styles.metaRow}>
                       <span>👤 <strong>Created by:</strong> {event.createdBy?.name}</span>
                       <span>📅 <strong>Created:</strong> {new Date(event.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className={styles.metaRow}>
+                      <span>📝 <strong>Registration:</strong> {event.registrationOpen ? 'Open' : 'Closed'}</span>
+                      <span>👥 <strong>Registered:</strong> {event.registeredStudents?.length || 0}</span>
                     </div>
                   </div>
 
@@ -389,6 +421,57 @@ const AdminEvents = () => {
                         {processing[event._id] ? "Processing..." : "🟢 Activate Event"}
                       </button>
                     )}
+                    {event.status === 'approved' && (
+                      event.registrationOpen ? (
+                        <button
+                          onClick={() => handleToggleEventStatus(event._id, "deactivate")}
+                          disabled={processing[event._id]}
+                          className={styles.deactivateBtn}
+                          style={{ display: 'none' }}
+                        />
+                      ) : null
+                    )}
+                    {event.status === 'approved' && (
+                      <button
+                        onClick={async () => {
+                          setProcessing(prev => ({ ...prev, [event._id]: true }))
+                          try {
+                            await axios.put(`/api/events/admin/${event._id}/toggle-registration`, { open: !event.registrationOpen }, {
+                              headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                            })
+                            showSuccess(`Registration ${!event.registrationOpen ? 'opened' : 'closed'} successfully!`)
+                            fetchData()
+                          } catch (error) {
+                            showError(error.response?.data?.message || 'Failed to toggle registration')
+                          } finally {
+                            setProcessing(prev => ({ ...prev, [event._id]: false }))
+                          }
+                        }}
+                        disabled={processing[event._id]}
+                        className={event.registrationOpen ? styles.rejectBtn : styles.approveBtn}
+                      >
+                        {processing[event._id] ? 'Processing...' : (event.registrationOpen ? 'Close Registration' : 'Open Registration')}
+                      </button>
+                    )}
+                    {/* Edit allowed only for approved and future events */}
+                    {event.status === 'approved' && new Date(event.date) >= new Date() && (
+                      <button
+                        onClick={() => {
+                          setEditingEvent(event)
+                          setEditFormData({
+                            title: event.title || '',
+                            description: event.description || '',
+                            date: new Date(event.date).toISOString().split('T')[0],
+                            time: event.time || '',
+                            venue: event.venue || '',
+                            imageUrl: event.imageUrl || ''
+                          })
+                        }}
+                        className={styles.editBtn}
+                      >
+                        ✏️ Edit
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteEvent(event._id)}
                       disabled={processing[event._id]}
@@ -410,6 +493,157 @@ const AdminEvents = () => {
           </div>
         )}
       </div>
+
+      {/* Upcoming Approved Events (All) */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2>Upcoming Approved Events</h2>
+          <div className={styles.statsInfo}>
+            <span className={styles.pendingCount}>
+              {upcomingApproved.length} upcoming
+            </span>
+          </div>
+        </div>
+
+        {upcomingApproved.length > 0 ? (
+          <div className={styles.eventsList}>
+            {upcomingApproved.map((event) => (
+              <div key={event._id} className={styles.eventItem}>
+                <div className={styles.eventInfo}>
+                  <div className={styles.eventHeader}>
+                    <h4>{event.title}</h4>
+                    <span className={styles.status} style={{ backgroundColor: '#28a745' }}>
+                      Approved
+                    </span>
+                  </div>
+
+                  <p className={styles.eventDescription}>{event.description}</p>
+
+                  <div className={styles.eventMeta}>
+                    <div className={styles.metaRow}>
+                      <span>📅 <strong>Date:</strong> {getEventDate(event.date)}</span>
+                      <span>🕒 <strong>Time:</strong> {event.time}</span>
+                    </div>
+                    <div className={styles.metaRow}>
+                      <span>📍 <strong>Venue:</strong> {event.venue}</span>
+                      <span>🏢 <strong>Scope:</strong> {event.isForAllClubs ? (<strong>All Clubs</strong>) : (event.club?.name || 'Club')}</span>
+                    </div>
+                    <div className={styles.metaRow}>
+                      <span>👤 <strong>Created by:</strong> {event.createdBy?.name}</span>
+                      <span>📝 <strong>Registration:</strong> {event.registrationOpen ? 'Open' : 'Closed'}</span>
+                    </div>
+                  </div>
+
+                  {event.imageUrl && (
+                    <div className={styles.eventImage}>
+                      <img 
+                        src={event.imageUrl} 
+                        alt={event.title}
+                        onError={(e) => { e.target.style.display = 'none' }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.eventActions}>
+                  <div className={styles.actionButtons}>
+                    {/* Edit allowed only for approved and future events */}
+                    <button
+                      onClick={() => {
+                        setEditingEvent(event)
+                        setEditFormData({
+                          title: event.title || '',
+                          description: event.description || '',
+                          date: new Date(event.date).toISOString().split('T')[0],
+                          time: event.time || '',
+                          venue: event.venue || '',
+                          imageUrl: event.imageUrl || ''
+                        })
+                      }}
+                      className={styles.editBtn}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(event._id)}
+                      disabled={processing[event._id]}
+                      className={styles.deleteBtn}
+                      title="Delete Event"
+                    >
+                      🗑️ Delete Event
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>📅</div>
+            <h3>No Upcoming Approved Events</h3>
+            <p>Approved events will appear here until they are completed.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Edit Modal */}
+      {editingEvent && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: '1.5rem', width: '90%', maxWidth: 600 }}>
+            <h3 style={{ marginBottom: '1rem' }}>Edit Event</h3>
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              const id = editingEvent._id
+              try {
+                setProcessing(prev => ({ ...prev, [id]: true }))
+                await axios.put(`/api/events/admin/${id}`, editFormData, {
+                  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                })
+                showSuccess('Event updated successfully')
+                setEditingEvent(null)
+                fetchData()
+              } catch (error) {
+                showError(error.response?.data?.message || 'Failed to update event')
+              } finally {
+                setProcessing(prev => ({ ...prev, [id]: false }))
+              }
+            }} className={styles.createForm}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Title</label>
+                  <input type="text" value={editFormData.title} onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })} required />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Date</label>
+                  <input type="date" value={editFormData.date} onChange={(e) => setEditFormData({ ...editFormData, date: e.target.value })} required />
+                </div>
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Time</label>
+                  <input type="time" value={editFormData.time} onChange={(e) => setEditFormData({ ...editFormData, time: e.target.value })} required />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Venue</label>
+                  <input type="text" value={editFormData.venue} onChange={(e) => setEditFormData({ ...editFormData, venue: e.target.value })} required />
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Description</label>
+                <textarea rows="4" value={editFormData.description} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })} required />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Image URL</label>
+                <input type="url" value={editFormData.imageUrl} onChange={(e) => setEditFormData({ ...editFormData, imageUrl: e.target.value })} />
+              </div>
+              <div className={styles.formActions}>
+                <button type="button" onClick={() => setEditingEvent(null)} className={styles.cancelBtn}>Cancel</button>
+                <button type="submit" className={styles.submitBtn}>Update Event</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>

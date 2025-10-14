@@ -67,10 +67,25 @@ router.get('/admin/all-clubs-events', auth, requireRole(['admin']), async (req, 
   }
 });
 
+// Get upcoming approved events (any scope) for admin
+router.get('/admin/upcoming', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const events = await Event.find({ status: 'approved', date: { $gte: today } })
+      .populate('club', 'name logoUrl')
+      .populate('createdBy', 'name')
+      .sort({ date: 1 });
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Admin creates event for all clubs
 router.post('/admin/create-for-all-clubs', auth, requireRole(['admin']), async (req, res) => {
   try {
-    const { title, description, date, time, venue, imageUrl } = req.body;
+    const { title, description, date, time, venue, imageUrl, registrationOpen } = req.body;
     const adminId = req.user.userId;
 
     console.log('Creating event with imageUrl:', imageUrl);
@@ -85,6 +100,7 @@ router.post('/admin/create-for-all-clubs', auth, requireRole(['admin']), async (
       venue,
       imageUrl: imageUrl || '',
       isForAllClubs: true,
+      registrationOpen: Boolean(registrationOpen),
       createdBy: adminId,
       status: 'approved' // Admin events are auto-approved
     });
@@ -128,6 +144,37 @@ router.put('/admin/:id/toggle-status', auth, requireRole(['admin']), async (req,
       .populate('createdBy', 'name');
     
     res.json({ message: `Event ${action}d successfully`, event: populatedEvent });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin opens/closes registration for all-clubs event
+router.put('/admin/:id/toggle-registration', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const { open } = req.body; // boolean
+
+    if (typeof open !== 'boolean') {
+      return res.status(400).json({ message: 'Invalid payload: open must be boolean' });
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    if (!event.isForAllClubs) {
+      return res.status(400).json({ message: 'This endpoint is only for admin-created events for all clubs' });
+    }
+
+    event.registrationOpen = open;
+    await event.save();
+
+    const populatedEvent = await Event.findById(event._id)
+      .populate('createdBy', 'name');
+
+    res.json({ message: `Registration ${open ? 'opened' : 'closed'} successfully`, event: populatedEvent });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -242,6 +289,34 @@ router.put('/:id/deactivate', auth, requireRole(['coordinator']), async (req, re
   }
 });
 
+// Coordinator opens/closes registration for their club's event
+router.put('/:id/toggle-registration', auth, requireRole(['coordinator']), async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const { open } = req.body; // boolean
+
+    if (typeof open !== 'boolean') {
+      return res.status(400).json({ message: 'Invalid payload: open must be boolean' });
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (String(event.club) !== String(req.user.coordinatingClub)) {
+      return res.status(403).json({ message: 'Not authorized to modify registration for this event' });
+    }
+
+    if (event.status !== 'approved') {
+      return res.status(400).json({ message: 'Only approved events can toggle registrations' });
+    }
+
+    event.registrationOpen = open;
+    await event.save();
+    res.json({ message: `Registration ${open ? 'opened' : 'closed'} successfully`, event });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get coordinator's club events
 router.get('/coordinator/my-events', auth, requireRole(['coordinator']), async (req, res) => {
   try {
@@ -277,6 +352,10 @@ router.post('/:id/register', auth, requireRole(['student']), async (req, res) =>
       return res.status(400).json({ message: 'Cannot register for unapproved events' });
     }
 
+    if (!event.registrationOpen) {
+      return res.status(400).json({ message: 'Registrations are currently closed for this event' });
+    }
+
     // Check if student is already registered
     if (event.registeredStudents.includes(studentId)) {
       return res.status(400).json({ message: 'Already registered for this event' });
@@ -286,13 +365,16 @@ router.post('/:id/register', auth, requireRole(['student']), async (req, res) =>
     // Allow registration if:
     // 1. It's an admin event for all clubs (isForAllClubs = true)
     // 2. Student is a member of the club that created the event
-    const studentClubIds = req.user.joinedClubs?.map(club => club._id.toString()) || [];
     const eventClubId = event.club?.toString();
-    
-    if (!event.isForAllClubs && !studentClubIds.includes(eventClubId)) {
-      return res.status(403).json({ 
-        message: 'You can only register for events from clubs you are a member of' 
-      });
+    if (!event.isForAllClubs) {
+      // Confirm membership from DB using req.user.id
+      const dbUser = await require('../models/User').findById(req.user.id).select('clubs');
+      const studentClubIds = (dbUser?.clubs || []).map(id => id.toString());
+      if (!studentClubIds.includes(eventClubId)) {
+        return res.status(403).json({ 
+          message: 'You can only register for events from clubs you are a member of' 
+        });
+      }
     }
 
     event.registeredStudents.push(studentId);
@@ -368,6 +450,43 @@ router.put('/:id', auth, requireRole(['coordinator']), async (req, res) => {
   }
 });
 
+// Admin updates approved future event
+router.put('/admin/:id', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const { title, description, date, time, venue, imageUrl } = req.body;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Prevent editing past events
+    const isPast = new Date(event.date) < new Date();
+    if (isPast) {
+      return res.status(400).json({ message: 'Cannot edit past events' });
+    }
+
+    // Only allow updates when approved (live)
+    if (event.status !== 'approved') {
+      return res.status(400).json({ message: 'Only approved events can be edited by admin' });
+    }
+
+    event.title = title ?? event.title;
+    event.description = description ?? event.description;
+    event.date = date ?? event.date;
+    event.time = time ?? event.time;
+    event.venue = venue ?? event.venue;
+    event.imageUrl = imageUrl ?? event.imageUrl;
+    await event.save();
+
+    const populated = await Event.findById(event._id).populate('createdBy', 'name');
+    res.json({ message: 'Event updated successfully', event: populated });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Delete event (coordinator can delete pending events)
 router.delete('/:id', auth, requireRole(['coordinator']), async (req, res) => {
   try {
@@ -403,6 +522,12 @@ router.delete('/admin/:id', auth, requireRole(['admin']), async (req, res) => {
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Prevent deleting past events
+    const isPast = new Date(event.date) < new Date();
+    if (isPast) {
+      return res.status(400).json({ message: 'Cannot delete past events' });
     }
 
     await Event.findByIdAndDelete(eventId);

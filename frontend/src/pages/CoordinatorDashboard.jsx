@@ -12,6 +12,7 @@ const CoordinatorDashboard = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [membershipRequests, setMembershipRequests] = useState([])
+  const [processingRequestIds, setProcessingRequestIds] = useState([])
   const [clubEvents, setClubEvents] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -53,14 +54,24 @@ const CoordinatorDashboard = () => {
   }
 
   const handleMembershipRequest = async (requestId, action) => {
+    // Optimistic UI: disable buttons and remove from list immediately
+    setProcessingRequestIds(prev => [...prev, requestId])
+    const previousRequests = membershipRequests
+    setMembershipRequests(prev => prev.filter(r => r._id !== requestId))
+
     try {
       await axios.put(`/api/clubs/requests/${requestId}`, { action }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       alert(`Request ${action}d successfully!`)
-      fetchData() // Refresh data
+      // Optionally refresh to stay in sync with server state
+      // fetchData()
     } catch (error) {
+      // Revert UI on failure
+      setMembershipRequests(previousRequests)
       alert(error.response?.data?.message || `Failed to ${action} request`)
+    } finally {
+      setProcessingRequestIds(prev => prev.filter(id => id !== requestId))
     }
   }
 
@@ -152,10 +163,18 @@ const CoordinatorDashboard = () => {
                   </p>
                 </div>
                 <div className={styles.requestActions}>
-                  <button className={styles.approveBtn} onClick={() => handleMembershipRequest(request._id, "approve")}>
+                  <button 
+                    className={styles.approveBtn} 
+                    onClick={() => handleMembershipRequest(request._id, "approve")}
+                    disabled={processingRequestIds.includes(request._id)}
+                  >
                     Approve
                   </button>
-                  <button className={styles.rejectBtn} onClick={() => handleMembershipRequest(request._id, "reject")}>
+                  <button 
+                    className={styles.rejectBtn} 
+                    onClick={() => handleMembershipRequest(request._id, "reject")}
+                    disabled={processingRequestIds.includes(request._id)}
+                  >
                     Reject
                   </button>
                 </div>

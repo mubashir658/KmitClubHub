@@ -31,6 +31,16 @@ const ClubCard = ({ club }) => {
           {club.description.length > 100 ? `${club.description.substring(0, 100)}...` : club.description}
         </p>
 
+        {/* Coordinator Information */}
+        {club.coordinators && club.coordinators.length > 0 && (
+          <div className={styles.coordinatorInfo}>
+            <span className={styles.coordinatorLabel}>Coordinator:</span>
+            <span className={styles.coordinatorName}>
+              {club.coordinators.map(coordinator => coordinator.name).join(', ')}
+            </span>
+          </div>
+        )}
+
         <Link 
           to={`/clubs/${club._id}`} 
           className={styles.viewClubBtn}

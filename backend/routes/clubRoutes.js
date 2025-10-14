@@ -8,6 +8,7 @@ router.get('/', (req, res) => {
   const Club = require('../models/Club');
   Club.find()
     .select('name description logoUrl category enrollmentOpen coordinators')
+    .populate('coordinators', 'name email rollNo')
     .then(clubs => res.json(clubs))
     .catch(err => res.status(500).json({ message: 'Error fetching clubs', error: err.message }));
 });

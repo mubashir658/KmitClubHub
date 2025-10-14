@@ -38,6 +38,7 @@ app.use('/api/polls', require('./routes/pollRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
+app.use('/api/admin/analytics', require('./routes/analyticsRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {
