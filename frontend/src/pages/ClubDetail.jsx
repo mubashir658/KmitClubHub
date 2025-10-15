@@ -70,11 +70,14 @@ const ClubDetail = () => {
     e.preventDefault()
     setEnrollMsg("")
     try {
-      const res = await axios.post(`/api/clubs/${id}/enroll`, {
+      // If user's academic info already set, do not resend fields
+      const body = (!user?.academicInfoSet) ? {
         year: enrollForm.year ? Number(enrollForm.year) : undefined,
         branch: enrollForm.branch || undefined,
         section: enrollForm.section || undefined
-      }, {
+      } : {}
+
+      const res = await axios.post(`/api/clubs/${id}/enroll`, body, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       setEnrollMsg('Enrolled successfully!')
@@ -86,7 +89,9 @@ const ClubDetail = () => {
         updateUser({
           joinedClubs: res.data.user.joinedClubs,
           year: res.data.user.year,
-          branch: res.data.user.branch
+          branch: res.data.user.branch,
+          section: res.data.user.section,
+          academicInfoSet: res.data.user.academicInfoSet
         })
       }
       
@@ -153,47 +158,64 @@ const ClubDetail = () => {
                   {enrollOpen && enrollmentEnabled && (
                     <form onSubmit={submitEnrollment} className={styles.enrollForm}>
                       <div className={styles.formRow}>
-                        <div className={styles.formGroup}>
-                          <label>Year</label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="4"
-                            name="year"
-                            value={enrollForm.year}
-                            onChange={handleEnrollChange}
-                            className={styles.input}
-                            placeholder="Enter your year"
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <label>Branch</label>
-                          <input
-                            type="text"
-                            name="branch"
-                            value={enrollForm.branch}
-                            onChange={handleEnrollChange}
-                            className={styles.input}
-                            placeholder="Enter your branch"
-                          />
-                        </div>
-                        <div className={styles.formGroup}>
-                          <label>Section</label>
-                          <select
-                            name="section"
-                            value={enrollForm.section}
-                            onChange={handleEnrollChange}
-                            className={styles.input}
-                          >
-                            <option value="">Select Section</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                            <option value="E">E</option>
-                            <option value="F">F</option>
-                          </select>
-                        </div>
+                        {!user?.academicInfoSet ? (
+                          <>
+                            <div className={styles.formGroup}>
+                              <label>Year</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="4"
+                                name="year"
+                                value={enrollForm.year}
+                                onChange={handleEnrollChange}
+                                className={styles.input}
+                                placeholder="Enter your year"
+                                required
+                              />
+                            </div>
+                            <div className={styles.formGroup}>
+                              <label>Branch</label>
+                              <select
+                                name="branch"
+                                value={enrollForm.branch}
+                                onChange={handleEnrollChange}
+                                className={styles.input}
+                                required
+                              >
+                                <option value="">Select Branch</option>
+                                <option value="CSE">CSE</option>
+                                <option value="IT">IT</option>
+                                <option value="CSM">CSM</option>
+                                <option value="CSD">CSD</option>
+                              </select>
+                            </div>
+                            <div className={styles.formGroup}>
+                              <label>Section</label>
+                              <select
+                                name="section"
+                                value={enrollForm.section}
+                                onChange={handleEnrollChange}
+                                className={styles.input}
+                                required
+                              >
+                                <option value="">Select Section</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                              </select>
+                            </div>
+                          </>
+                        ) : (
+                          <div className={styles.formGroup}>
+                            <div className={styles.note}>
+                              Using saved academic info: Year {user?.year || '-'}, Branch {user?.branch || '-'}, Section {user?.section || '-'}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <button type="submit" className={styles.submitBtn}>Submit Enrollment</button>
                       {enrollMsg && <div className={styles.note}>{enrollMsg}</div>}

@@ -73,10 +73,11 @@ const StudentPolls = () => {
                 <h4 style={{ fontSize: '18px', marginBottom: '15px', color: '#333' }}>
                   {poll.question}
                 </h4>
-                <p style={{ marginBottom: '15px', color: '#666' }}>
-                  <strong>Scope:</strong> {poll.scope}
-                  {poll.clubId && <span> - {poll.clubId.name}</span>}
-                </p>
+                {poll.clubId && (
+                  <p style={{ marginBottom: '15px', color: '#666' }}>
+                    {poll.clubId.name}
+                  </p>
+                )}
                 
                 <div style={{ marginBottom: '15px' }}>
                   <strong>Total Votes: {totalVotes}</strong>

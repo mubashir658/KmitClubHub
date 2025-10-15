@@ -374,9 +374,7 @@ const CoordinatorPolls = () => {
                     <h4 style={{ fontSize: '18px', marginBottom: '15px', color: '#333' }}>
                       {poll.question}
                     </h4>
-                    <p style={{ marginBottom: '15px', color: '#666' }}>
-                      <strong>Audience:</strong> {poll.scope}
-                    </p>
+                    {/* Scope hidden from UI per requirement */}
                     <div style={{ marginBottom: '15px' }}>
                       <strong>Total Votes: {totalVotes}</strong>
                     </div>

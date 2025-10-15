@@ -53,19 +53,7 @@ const AdminPolls = () => {
     }
   }
 
-  const vote = async (pollId, optionId) => {
-    try {
-      await axios.post(
-        `/api/polls/${pollId}/vote`,
-        { optionId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      )
-      alert("Vote submitted successfully!")
-      await load() // Refresh polls to show updated results
-    } catch (e) {
-      alert(e.response?.data?.message || "Failed to submit vote")
-    }
-  }
+  // Admins do not vote in polls; results-only view
 
   const getTotalVotes = (poll) => {
     return poll.options?.reduce((total, option) => total + (option.votes || 0), 0) || 0
@@ -81,9 +69,18 @@ const AdminPolls = () => {
   return (
     <div className={styles.section}>
       <h1>Admin Polls</h1>
-      <div className={styles.eventForm}>
-        <h2>Create Poll</h2>
-        <form onSubmit={create}>
+      {/* Create Poll card - match width/appearance of poll cards */}
+      <div className={styles.eventsList}>
+        <div className={styles.eventItem} style={{ 
+          border: '2px solid #e9ecef', 
+          borderRadius: '12px', 
+          padding: '20px',
+          marginBottom: '20px',
+          backgroundColor: '#fff'
+        }}>
+        <div className={styles.eventInfo} style={{ width: '100%', textAlign: 'left' }}>
+        <h2 style={{ marginTop: 0 }}>Create Poll</h2>
+        <form onSubmit={create} style={{ width: '100%' }}>
           <div className={styles.formGroup}>
             <label>Question</label>
             <input
@@ -172,9 +169,13 @@ const AdminPolls = () => {
               />
             </div>
           ))}
-          <button type="button" onClick={addOption} style={{ marginRight: '10px' }}>Add Option</button>
-          <button type="submit" className={styles.submitBtn}>Create Poll</button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" onClick={addOption}>Add Option</button>
+            <button type="submit" className={styles.submitBtn}>Create Poll</button>
+          </div>
         </form>
+        </div>
+        </div>
       </div>
 
       <div className={styles.section}>
@@ -194,10 +195,11 @@ const AdminPolls = () => {
                   <h4 style={{ fontSize: '18px', marginBottom: '15px', color: '#333' }}>
                     {poll.question}
                   </h4>
-                  <p style={{ marginBottom: '15px', color: '#666' }}>
-                    <strong>Scope:</strong> {poll.scope}
-                    {poll.clubId && <span> - {poll.clubId.name}</span>}
-                  </p>
+                  {poll.clubId && (
+                    <p style={{ marginBottom: '15px', color: '#666' }}>
+                      {poll.clubId.name}
+                    </p>
+                  )}
                   
                   <div style={{ marginBottom: '15px' }}>
                     <strong>Total Votes: {totalVotes}</strong>
@@ -216,20 +218,6 @@ const AdminPolls = () => {
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <span style={{ fontWeight: '500', fontSize: '14px' }}>{option.text}</span>
-                            <button
-                              onClick={() => vote(poll._id, option._id)}
-                              style={{
-                                backgroundColor: '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                padding: '6px 12px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '12px'
-                              }}
-                            >
-                              Vote
-                            </button>
                           </div>
                           
                           <div style={{ marginBottom: '8px' }}>

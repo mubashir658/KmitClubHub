@@ -176,12 +176,13 @@ exports.toggleEnrollment = async (req, res) => {
   }
 };
 
-// Enroll current user (student) into a club, supply year/branch if missing
+// Enroll current user (student) into a club
+// If this is the student's first enrollment (academicInfoSet=false), require and persist academic info once
 exports.enrollInClub = async (req, res) => {
   try {
     const { clubId } = req.params;
     const { userId, role } = req.user;
-    const { year, branch } = req.body;
+    const { year, branch, section } = req.body;
 
     if (role !== 'student') return res.status(403).json({ message: 'Only students can enroll' });
 
@@ -198,9 +199,19 @@ exports.enrollInClub = async (req, res) => {
       return res.status(400).json({ message: 'You are already enrolled in this club' });
     }
 
-    // Update year/branch if provided
-    if (year !== undefined) user.year = year;
-    if (branch !== undefined) user.branch = branch;
+    // For first-time enrollment, require academic info and lock it in
+    if (!user.academicInfoSet) {
+      if (year == null || branch == null || section == null || section === '') {
+        return res.status(400).json({ message: 'Year, branch, and section are required for first-time enrollment' });
+      }
+      user.year = year;
+      user.branch = branch;
+      user.section = section;
+      user.academicInfoSet = true;
+    } else {
+      // If already set once, ignore any attempted changes to academic info
+      // No-op to prevent changing branch/section via enroll endpoint
+    }
 
     // Add club to user's clubs array
     user.clubs.push(clubId);
@@ -234,6 +245,8 @@ exports.enrollInClub = async (req, res) => {
         id: updatedUser._id, 
         year: updatedUser.year, 
         branch: updatedUser.branch, 
+        section: updatedUser.section,
+        academicInfoSet: updatedUser.academicInfoSet,
         joinedClubs: updatedUser.clubs 
       } 
     });
