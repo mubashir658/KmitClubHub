@@ -53,7 +53,7 @@ const Navbar = () => {
                 Dashboard
               </Link>
               <div className={styles.userMenu}>
-                <span className={styles.userName}>Hi, {user.name}</span>
+                <span className={styles.userName}>Hi, {user.role === 'admin' ? 'Admin' : user.name}</span>
                 <button onClick={handleLogout} className={styles.logoutBtn}>
                   Logout
                 </button>

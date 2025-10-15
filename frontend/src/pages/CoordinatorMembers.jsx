@@ -186,7 +186,7 @@ const CoordinatorMembers = () => {
     return (
       <div className={styles.dashboardHome}>
         <div className={styles.welcomeSection}>
-          <h1>Member Management</h1>
+          <h1>My Club</h1>
           <p>Manage club members and enrollment settings</p>
         </div>
         <div className={styles.section}>
@@ -206,7 +206,7 @@ const CoordinatorMembers = () => {
     return (
       <div className={styles.dashboardHome}>
         <div className={styles.welcomeSection}>
-          <h1>Member Management</h1>
+          <h1>My Club</h1>
           <p>Manage club members and enrollment settings</p>
         </div>
         <div className={styles.section}>
@@ -222,7 +222,7 @@ const CoordinatorMembers = () => {
   return (
     <div className={styles.dashboardHome}>
       <div className={styles.welcomeSection}>
-        <h1>Member Management</h1>
+        <h1>My Club</h1>
         <p>Manage {club.name} members and enrollment settings</p>
       </div>
 

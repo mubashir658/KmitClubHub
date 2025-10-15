@@ -127,13 +127,6 @@ const CoordinatorFeedback = () => {
             </div>
           </div>
           <div className={styles.progressCard}>
-            <div className={styles.progressIcon} style={{ backgroundColor: '#28a745' }}>🎯</div>
-            <div className={styles.progressContent}>
-              <h3>{feedbackStats.resolved}</h3>
-              <p>Resolved</p>
-            </div>
-          </div>
-          <div className={styles.progressCard}>
             <div className={styles.progressIcon} style={{ backgroundColor: '#dc3545' }}>📤</div>
             <div className={styles.progressContent}>
               <h3>{feedbackStats.escalated}</h3>
@@ -148,12 +141,12 @@ const CoordinatorFeedback = () => {
               <div 
                 className={styles.progressBarFill} 
                 style={{ 
-                  width: `${((feedbackStats.resolved + feedbackStats.solved) / feedbackStats.total) * 100}%` 
+                  width: `${(feedbackStats.solved / feedbackStats.total) * 100}%` 
                 }}
               ></div>
             </div>
             <p className={styles.progressText}>
-              {Math.round(((feedbackStats.resolved + feedbackStats.solved) / feedbackStats.total) * 100)}% Complete
+              {Math.round((feedbackStats.solved / feedbackStats.total) * 100)}% Complete
             </p>
           </div>
         )}
@@ -258,21 +251,6 @@ const CoordinatorFeedback = () => {
                       }}
                     >
                       Solve
-                    </button>
-                    <button
-                      onClick={() => handleFeedbackAction(feedback._id, "resolve")}
-                      style={{
-                        backgroundColor: '#17a2b8',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
-                      Mark Resolved
                     </button>
                     <button
                       onClick={() => handleFeedbackAction(feedback._id, "forward")}

@@ -77,27 +77,6 @@ const StudentClubs = () => {
     setLeaveReason("")
   }
 
-  const handleJoinClub = async (clubId) => {
-    try {
-      const response = await axios.post(`/api/clubs/${clubId}/enroll`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      })
-      showSuccess("Successfully joined the club!")
-      
-      // Update user context with new club data
-      if (response.data.user) {
-        updateUser({
-          joinedClubs: response.data.user.joinedClubs,
-          year: response.data.user.year,
-          branch: response.data.user.branch
-        })
-      }
-      
-      fetchData() // Refresh data
-    } catch (err) {
-      showError(err.response?.data?.message || "Failed to join club")
-    }
-  }
 
   if (loading) {
     return <div className="loading">Loading clubs...</div>
@@ -219,6 +198,9 @@ const StudentClubs = () => {
                       <span className={styles.members}>
                         {club.members?.length || 0} members
                       </span>
+                      {isEnrollmentOpen && !isJoined && (
+                        <span className={styles.enrollmentOpen}>Enrollment Open</span>
+                      )}
                       {!isEnrollmentOpen && (
                         <span className={styles.enrollmentClosed}>Enrollment Closed</span>
                       )}
@@ -235,16 +217,7 @@ const StudentClubs = () => {
                   </Link>
                   {isJoined ? (
                     <span className={styles.joinedBadge}>Joined</span>
-                  ) : isEnrollmentOpen ? (
-                    <button
-                      onClick={() => handleJoinClub(club._id)}
-                      className={styles.joinBtn}
-                    >
-                      Join Club
-                    </button>
-                  ) : (
-                    <span className={styles.closedBadge}>Enrollment Closed</span>
-                  )}
+                  ) : null}
                 </div>
               </div>
             )

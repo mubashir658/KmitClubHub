@@ -13,7 +13,7 @@ const ClubDetail = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [enrollOpen, setEnrollOpen] = useState(false)
-  const [enrollForm, setEnrollForm] = useState({ year: "", branch: "" })
+  const [enrollForm, setEnrollForm] = useState({ year: "", branch: "", section: "" })
   const [enrollMsg, setEnrollMsg] = useState("")
 
   useEffect(() => {
@@ -72,12 +72,13 @@ const ClubDetail = () => {
     try {
       const res = await axios.post(`/api/clubs/${id}/enroll`, {
         year: enrollForm.year ? Number(enrollForm.year) : undefined,
-        branch: enrollForm.branch || undefined
+        branch: enrollForm.branch || undefined,
+        section: enrollForm.section || undefined
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       setEnrollMsg('Enrolled successfully!')
-      setEnrollForm({ year: "", branch: "" })
+      setEnrollForm({ year: "", branch: "", section: "" })
       setEnrollOpen(false)
       
       // Update the user context with the new clubs data
@@ -175,6 +176,23 @@ const ClubDetail = () => {
                             className={styles.input}
                             placeholder="Enter your branch"
                           />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Section</label>
+                          <select
+                            name="section"
+                            value={enrollForm.section}
+                            onChange={handleEnrollChange}
+                            className={styles.input}
+                          >
+                            <option value="">Select Section</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                          </select>
                         </div>
                       </div>
                       <button type="submit" className={styles.submitBtn}>Submit Enrollment</button>

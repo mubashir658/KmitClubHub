@@ -250,6 +250,10 @@ const CoordinatorUsers = () => {
           <h3>{clubMembers.filter(m => m.year === 3).length}</h3>
           <p>3rd Year</p>
         </div>
+        <div className={styles.statCard}>
+          <h3>{clubMembers.filter(m => m.year === 4).length}</h3>
+          <p>4th Year</p>
+        </div>
       </div>
 
       {/* Error and Success Messages */}
@@ -362,6 +366,17 @@ const CoordinatorUsers = () => {
             style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
           >
             👨‍🎓 3rd Year ({clubMembers.filter(m => m.year === 3).length})
+          </button>
+          <button
+            onClick={() => {
+              setYearFilter('4');
+              setBranchFilter('all');
+              setSearchTerm('');
+            }}
+            className={yearFilter === '4' ? styles.submitBtn : styles.cancelBtn}
+            style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
+          >
+            👨‍🎓 4th Year ({clubMembers.filter(m => m.year === 4).length})
           </button>
           <button
             onClick={clearAllFilters}

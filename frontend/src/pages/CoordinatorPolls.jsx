@@ -7,6 +7,7 @@ import styles from "./Dashboard.module.css"
 const CoordinatorPolls = () => {
   const { user } = useAuth()
   const [polls, setPolls] = useState([])
+  const [activePolls, setActivePolls] = useState([])
   const [form, setForm] = useState({ question: "", options: ["", ""] })
   const [loading, setLoading] = useState(true)
   const [club, setClub] = useState(null)
@@ -76,6 +77,38 @@ const CoordinatorPolls = () => {
     }
   }
 
+  const hasVoted = (poll) => {
+    if (!user) return false
+    return Array.isArray(poll.votes) && poll.votes.some(v => v.userId === user.id || v.userId === user._id)
+  }
+
+  const vote = async (pollId, optionId, refreshClub = false, refreshActive = false) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/polls/${pollId}/vote`,
+        { optionId },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      )
+      // Refresh lists
+      if (refreshClub) await load()
+      if (refreshActive) await loadActiveForCoordinator()
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to submit vote')
+    }
+  }
+
+  const loadActiveForCoordinator = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/polls/active`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      setActivePolls(res.data)
+    } catch (e) {
+      console.error('Error loading active polls for coordinator:', e)
+      setActivePolls([])
+    }
+  }
+
   const deletePoll = async (pollId) => {
     if (!window.confirm('Delete this poll?')) return
     setDeleting(pollId)
@@ -100,6 +133,11 @@ const CoordinatorPolls = () => {
       load()
     }
   }, [club])
+
+  useEffect(() => {
+    // Load global/coordinator-visible polls regardless of club
+    loadActiveForCoordinator()
+  }, [])
 
   const addOption = () => setForm((f) => ({ ...f, options: [...f.options, ""] }))
   const updateOption = (i, v) => setForm((f) => ({ ...f, options: f.options.map((o, idx) => (idx === i ? v : o)) }))
@@ -263,7 +301,21 @@ const CoordinatorPolls = () => {
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <span style={{ fontWeight: '500', fontSize: '14px' }}>{option.text}</span>
-                            <span style={{ color: '#666', fontSize: '12px' }}>Results</span>
+                            <button
+                              onClick={() => vote(poll._id, option._id, true, false)}
+                              disabled={hasVoted(poll)}
+                              style={{
+                                backgroundColor: hasVoted(poll) ? '#adb5bd' : '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: hasVoted(poll) ? 'not-allowed' : 'pointer',
+                                fontSize: '12px'
+                              }}
+                            >
+                              {hasVoted(poll) ? 'Voted' : 'Vote'}
+                            </button>
                           </div>
                           
                           <div style={{ marginBottom: '8px' }}>
@@ -298,6 +350,95 @@ const CoordinatorPolls = () => {
         {polls.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
             No polls created yet. Create your first poll above!
+          </div>
+        )}
+      </div>
+
+      <div className={styles.section}>
+        <h2>Global & Coordinator Polls</h2>
+        <div style={{ marginBottom: 12, color: '#666' }}>Polls with audience "All" or "Coordinators"</div>
+        <div className={styles.eventsList}>
+          {activePolls
+            .filter(p => p.scope === 'all' || p.scope === 'coordinators')
+            .map((poll) => {
+              const totalVotes = getTotalVotes(poll)
+              return (
+                <div key={poll._id} className={styles.eventItem} style={{ 
+                  border: '2px solid #e9ecef', 
+                  borderRadius: '12px', 
+                  padding: '20px',
+                  marginBottom: '20px',
+                  backgroundColor: '#fff'
+                }}>
+                  <div className={styles.eventInfo}>
+                    <h4 style={{ fontSize: '18px', marginBottom: '15px', color: '#333' }}>
+                      {poll.question}
+                    </h4>
+                    <p style={{ marginBottom: '15px', color: '#666' }}>
+                      <strong>Audience:</strong> {poll.scope}
+                    </p>
+                    <div style={{ marginBottom: '15px' }}>
+                      <strong>Total Votes: {totalVotes}</strong>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {poll.options?.map((option) => {
+                        const percentage = getPercentage(option.votes || 0, totalVotes)
+                        return (
+                          <div key={option._id} style={{
+                            border: '1px solid #ddd',
+                            borderRadius: '8px',
+                            padding: '15px',
+                            backgroundColor: '#f8f9fa',
+                            position: 'relative'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <span style={{ fontWeight: '500', fontSize: '14px' }}>{option.text}</span>
+                              <button
+                                onClick={() => vote(poll._id, option._id, false, true)}
+                                disabled={hasVoted(poll)}
+                                style={{
+                                  backgroundColor: hasVoted(poll) ? '#adb5bd' : '#007bff',
+                                  color: 'white',
+                                  border: 'none',
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  cursor: hasVoted(poll) ? 'not-allowed' : 'pointer',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                {hasVoted(poll) ? 'Voted' : 'Vote'}
+                              </button>
+                            </div>
+                            <div style={{ marginBottom: '8px' }}>
+                              <span style={{ fontWeight: '500' }}>{option.votes || 0} votes</span>
+                              <span style={{ marginLeft: '10px', color: '#666' }}>({percentage}%)</span>
+                            </div>
+                            <div style={{
+                              width: '100%',
+                              height: '8px',
+                              backgroundColor: '#e9ecef',
+                              borderRadius: '4px',
+                              overflow: 'hidden'
+                            }}>
+                              <div style={{
+                                width: `${percentage}%`,
+                                height: '100%',
+                                backgroundColor: '#007bff',
+                                transition: 'width 0.3s ease'
+                              }}></div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+        </div>
+        {activePolls.filter(p => p.scope === 'all' || p.scope === 'coordinators').length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            No global/coordinator polls available.
           </div>
         )}
       </div>
