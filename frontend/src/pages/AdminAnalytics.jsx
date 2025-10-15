@@ -38,6 +38,9 @@ const AdminAnalytics = () => {
   const [studentDistribution, setStudentDistribution] = useState([])
   const [insights, setInsights] = useState([])
   const [recentActivity, setRecentActivity] = useState([])
+  const [selectedEventId, setSelectedEventId] = useState("")
+  const [eventOptions, setEventOptions] = useState([])
+  const [eventComposition, setEventComposition] = useState({ byBranch: [], byYear: [], byClub: [], totalRegistrations: 0 })
 
   // Colors for charts
   const COLORS = ["#6C63FF", "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8"]
@@ -57,6 +60,10 @@ const AdminAnalytics = () => {
     try {
       const response = await axios.get("/api/clubs")
       setClubs(response.data)
+      // Build event options list (approved and upcoming) for selection
+      const eventsResp = await axios.get('/api/events')
+      const opts = eventsResp.data.map(e => ({ id: e._id, title: e.title }))
+      setEventOptions(opts)
     } catch (error) {
       console.error("Error fetching clubs:", error)
     }
@@ -91,6 +98,12 @@ const AdminAnalytics = () => {
       setStudentDistribution(distributionRes.data)
       setInsights(insightsRes.data)
       setRecentActivity(activityRes.data)
+
+      // If an event is selected, fetch its composition
+      if (selectedEventId) {
+        const compRes = await axios.get(`/api/admin/analytics/event-registration-composition/${selectedEventId}`)
+        setEventComposition(compRes.data)
+      }
     } catch (error) {
       console.error("Error fetching analytics data:", error)
       setError("Failed to load analytics data. Please try again later.")
@@ -311,6 +324,80 @@ const AdminAnalytics = () => {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Event Composition Section */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+          <h3 className="text-xl font-semibold text-gray-800">Event Composition Analytics</h3>
+          <select
+            value={selectedEventId}
+            onChange={async (e) => {
+              const id = e.target.value
+              setSelectedEventId(id)
+              if (id) {
+                const compRes = await axios.get(`/api/admin/analytics/event-registration-composition/${id}`)
+                setEventComposition(compRes.data)
+              } else {
+                setEventComposition({ byBranch: [], byYear: [], byClub: [], totalRegistrations: 0 })
+              }
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
+          >
+            <option value="">Select Event</option>
+            {eventOptions.map(e => (
+              <option key={e.id} value={e.id}>{e.title}</option>
+            ))}
+          </select>
+        </div>
+
+        {selectedEventId && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Branch composition pie */}
+            <div>
+              <h4 className="font-medium text-gray-700 mb-4">By Branch</h4>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie data={eventComposition.byBranch} dataKey="percent" nameKey="branch" cx="50%" cy="50%" outerRadius={80} label={({ branch, percent }) => `${branch} ${percent}%`}>
+                    {eventComposition.byBranch.map((entry, index) => (
+                      <Cell key={`branch-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Year composition pie */}
+            <div>
+              <h4 className="font-medium text-gray-700 mb-4">By Year</h4>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie data={eventComposition.byYear} dataKey="percent" nameKey="year" cx="50%" cy="50%" outerRadius={80} label={({ year, percent }) => `${year} ${percent}%`}>
+                    {eventComposition.byYear.map((entry, index) => (
+                      <Cell key={`year-${index}`} fill={COLORS[(index + 3) % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Top contributing clubs */}
+            <div>
+              <h4 className="font-medium text-gray-700 mb-4">Top Contributing Clubs</h4>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={[...eventComposition.byClub].sort((a,b) => b.count - a.count).slice(0,5)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="club" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#45B7D1" radius={[4,4,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Recent Activity Table */}

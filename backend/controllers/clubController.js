@@ -2,6 +2,54 @@ const Club = require('../models/Club');
 const User = require('../models/User');
 const LeaveRequest = require('../models/LeaveRequest');
 
+// Create a new club (admin only)
+exports.createClub = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      logoUrl,
+      category,
+      instagram,
+      clubKey,
+      enrollmentOpen,
+      teamHeads,
+    } = req.body;
+
+    if (!name || !description || !category || !clubKey) {
+      return res.status(400).json({ message: 'name, description, category and clubKey are required' });
+    }
+
+    const existing = await Club.findOne({ name });
+    if (existing) {
+      return res.status(400).json({ message: 'Club name already exists' });
+    }
+
+    const club = new Club({
+      name,
+      description,
+      logoUrl: logoUrl || '',
+      category,
+      instagram: instagram || '',
+      clubKey,
+      enrollmentOpen: Boolean(enrollmentOpen),
+      teamHeads: Array.isArray(teamHeads) ? teamHeads : [],
+    });
+
+    await club.save();
+    return res.status(201).json({ message: 'Club created successfully', club });
+  } catch (err) {
+    console.error('Create club error:', err);
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Validation error', error: err.message });
+    }
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'Club name already exists' });
+    }
+    return res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 exports.getClubById = async (req, res) => {
   try {
     const club = await Club.findById(req.params.id)
@@ -158,6 +206,25 @@ exports.enrollInClub = async (req, res) => {
     user.clubs.push(clubId);
     await user.save();
 
+    // Update club membership stats (by year and branch)
+    try {
+      const ClubMembershipStats = require('../models/ClubMembershipStats');
+      const stats = await ClubMembershipStats.findOne({ club: clubId }) || new (require('../models/ClubMembershipStats'))({ club: clubId });
+      stats.totalMembers = (stats.totalMembers || 0) + 1;
+      if (user.year != null) {
+        const yearKey = String(user.year);
+        stats.byYear.set(yearKey, (stats.byYear.get(yearKey) || 0) + 1);
+      }
+      if (user.branch) {
+        const branchKey = String(user.branch);
+        stats.byBranch.set(branchKey, (stats.byBranch.get(branchKey) || 0) + 1);
+      }
+      stats.updatedAt = new Date();
+      await stats.save();
+    } catch (statsErr) {
+      console.error('Error updating ClubMembershipStats:', statsErr.message);
+    }
+
     // Fetch updated user with populated clubs
     const updatedUser = await User.findById(userId).populate('clubs');
 
@@ -187,9 +254,14 @@ exports.getPendingMembershipRequests = async (req, res) => {
 
     // Find all users who have this club in their clubs array (pending approval)
     // This is a simplified approach - in a real system you'd have a separate MembershipRequest model
+    const MembershipApproval = require('../models/MembershipApproval');
+    const approvals = await MembershipApproval.find({ club: coordinatingClub }).select('student');
+    const approvedStudentIds = new Set(approvals.map(a => String(a.student)));
+
     const pendingMembers = await User.find({ 
       clubs: coordinatingClub,
-      role: 'student'
+      role: 'student',
+      _id: { $nin: Array.from(approvedStudentIds) }
     })
       .select('name email rollNo branch year')
       .sort({ createdAt: -1 });
@@ -222,8 +294,14 @@ exports.handleMembershipRequest = async (req, res) => {
     }
 
     if (action === 'approve') {
-      // User is already in the club (as per current simplified model)
-      res.json({ message: 'Membership request approved' });
+      const MembershipApproval = require('../models/MembershipApproval');
+      // Record approval; unique index prevents duplicates
+      await MembershipApproval.updateOne(
+        { student: user._id, club: coordinatingClub },
+        { $setOnInsert: { approvedAt: new Date() } },
+        { upsert: true }
+      );
+      return res.json({ message: 'Membership request approved' });
     } else {
       // Remove user from club
       user.clubs = user.clubs.filter(clubId => String(clubId) !== String(coordinatingClub));

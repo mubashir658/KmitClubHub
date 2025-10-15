@@ -21,8 +21,6 @@ const CoordinatorEvents = () => {
     time: "",
     venue: "",
     imageUrl: "",
-    audienceYears: [],
-    audienceBranches: [],
     registrationOpen: false
   })
   const [imageError, setImageError] = useState("")
@@ -274,8 +272,6 @@ const CoordinatorEvents = () => {
       time: event.time || "",
       venue: event.venue || "",
       imageUrl: event.imageUrl || "",
-      audienceYears: event.audienceYears || [],
-      audienceBranches: event.audienceBranches || [],
       registrationOpen: Boolean(event.registrationOpen)
     }
     
@@ -304,8 +300,6 @@ const CoordinatorEvents = () => {
       time: "",
       venue: "",
       imageUrl: "",
-      audienceYears: [],
-      audienceBranches: [],
       registrationOpen: false
     })
     setShowForm(false)
@@ -462,49 +456,7 @@ const CoordinatorEvents = () => {
                 )}
               </div>
 
-                {/* Audience for analytics */}
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>Target Years (for analytics)</label>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {[1,2,3,4].map(y => (
-                        <label key={y} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <input
-                            type="checkbox"
-                            checked={formData.audienceYears.includes(y)}
-                            onChange={(e) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                audienceYears: e.target.checked ? [...prev.audienceYears, y] : prev.audienceYears.filter(v => v !== y)
-                              }))
-                            }}
-                          />
-                          {y} year
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Target Branches (for analytics)</label>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {['CSE','CSM','IT','CSD'].map(br => (
-                        <label key={br} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <input
-                            type="checkbox"
-                            checked={formData.audienceBranches.includes(br)}
-                            onChange={(e) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                audienceBranches: e.target.checked ? [...prev.audienceBranches, br] : prev.audienceBranches.filter(v => v !== br)
-                              }))
-                            }}
-                          />
-                          {br}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                {/* Removed target audience checkboxes per requirements */}
 
               <div className={styles.formGroup}>
                 <label htmlFor="eventImage">Event Image (Optional)</label>

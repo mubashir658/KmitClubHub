@@ -5,6 +5,8 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const Feedback = require('../models/Feedback');
 const Club = require('../models/Club');
+const ClubMembershipStats = require('../models/ClubMembershipStats');
+const EventRegistrationStats = require('../models/EventRegistrationStats');
 
 // Get analytics data for admin dashboard
 router.get('/dashboard', auth, requireRole(['admin']), async (req, res) => {
@@ -135,6 +137,73 @@ router.get('/events', auth, requireRole(['admin']), async (req, res) => {
   } catch (error) {
     console.error('Error fetching event analytics:', error);
     res.status(500).json({ message: 'Error fetching event analytics', error: error.message });
+  }
+});
+
+// Club membership composition (branch/year percentages)
+router.get('/club-membership-composition', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const clubId = req.query.clubId;
+    const query = clubId ? { club: clubId } : {};
+    const stats = await ClubMembershipStats.find(query).populate('club', 'name');
+    const data = stats.map(s => {
+      const total = s.totalMembers || 0;
+      const byBranch = Array.from(s.byBranch.entries()).map(([branch, count]) => ({
+        branch,
+        count,
+        percent: total > 0 ? Math.round((count / total) * 100) : 0
+      }));
+      const byYear = Array.from(s.byYear.entries()).map(([year, count]) => ({
+        year: `Year ${year}`,
+        count,
+        percent: total > 0 ? Math.round((count / total) * 100) : 0
+      }));
+      return {
+        clubId: s.club._id,
+        club: s.club.name,
+        totalMembers: total,
+        byBranch,
+        byYear
+      };
+    });
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching club membership composition:', error);
+    res.status(500).json({ message: 'Error', error: error.message });
+  }
+});
+
+// Event registration composition (branch/year percentages)
+router.get('/event-registration-composition/:eventId', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const s = await EventRegistrationStats.findOne({ event: eventId });
+    if (!s) return res.json({ totalRegistrations: 0, byBranch: [], byYear: [], byClub: [] });
+    const total = s.totalRegistrations || 0;
+    const byBranch = Array.from(s.byBranch.entries()).map(([branch, count]) => ({
+      branch,
+      count,
+      percent: total > 0 ? Math.round((count / total) * 100) : 0
+    }));
+    const byYear = Array.from(s.byYear.entries()).map(([year, count]) => ({
+      year: `Year ${year}`,
+      count,
+      percent: total > 0 ? Math.round((count / total) * 100) : 0
+    }));
+    // Map club IDs to names
+    const clubIds = Array.from(s.byClub.keys());
+    const clubs = await Club.find({ _id: { $in: clubIds } }).select('name');
+    const idToName = new Map(clubs.map(c => [String(c._id), c.name]));
+    const byClub = Array.from(s.byClub.entries()).map(([clubId, count]) => ({
+      clubId,
+      club: idToName.get(String(clubId)) || 'All Clubs',
+      count,
+      percent: total > 0 ? Math.round((count / total) * 100) : 0
+    }));
+    res.json({ totalRegistrations: total, byBranch, byYear, byClub });
+  } catch (error) {
+    console.error('Error fetching event registration composition:', error);
+    res.status(500).json({ message: 'Error', error: error.message });
   }
 });
 

@@ -9,6 +9,7 @@ const AdminClubs = () => {
   const [clubs, setClubs] = useState([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState({})
+  const [imageError, setImageError] = useState("")
 
   useEffect(() => {
     fetchClubs()
@@ -16,7 +17,7 @@ const AdminClubs = () => {
 
   const fetchClubs = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/clubs')
+      const response = await axios.get('/api/clubs')
       setClubs(response.data)
     } catch (error) {
       console.error('Error fetching clubs:', error)
@@ -28,7 +29,7 @@ const AdminClubs = () => {
   const toggleEnrollment = async (clubId, currentStatus) => {
     setUpdating(prev => ({ ...prev, [clubId]: true }))
     try {
-      await axios.post(`http://localhost:5000/api/clubs/${clubId}/toggle-enrollment`, {}, {
+      await axios.post(`/api/clubs/${clubId}/toggle-enrollment`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       
@@ -47,6 +48,25 @@ const AdminClubs = () => {
     }
   }
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setImageError('Please select a valid image file')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError('Image size should be less than 2MB')
+      return
+    }
+    setImageError("")
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setCreateFormData(prev => ({ ...prev, logoUrl: event.target.result }))
+    }
+    reader.readAsDataURL(file)
+  }
+
   if (loading) {
     return <div className="loading">Loading clubs...</div>
   }
@@ -57,51 +77,56 @@ const AdminClubs = () => {
         <h1>Club Management</h1>
         <p>Manage enrollment settings for all clubs</p>
       </div>
-
+      {/* Manage Enrollment Section */}
       <div className={styles.section}>
-        <h2>Club Enrollment Control</h2>
-        <p>Toggle enrollment status for each club. When enabled, students can enroll in the club.</p>
-        
-        <div className={styles.clubsGrid}>
-          {clubs.map((club) => (
-            <div key={club._id} className={styles.clubCard}>
-              <div className={styles.clubHeader}>
-                <div className={styles.clubLogo}>
-                  <img 
-                    src={club.logoUrl || "/placeholder.svg"} 
-                    alt={club.name}
-                    onError={(e) => {
-                      e.target.src = "/placeholder.svg"
-                    }}
-                  />
+        <div className={styles.sectionHeader}>
+          <h2>Manage Club Enrollment</h2>
+        </div>
+        <div className={styles.usersTable}>
+          <div className={styles.tableHeader}>
+            <div>Club</div>
+            <div>Category</div>
+            <div>Enrollment</div>
+            <div>Action</div>
+          </div>
+          {clubs && clubs.length > 0 ? (
+            clubs.map((club) => (
+              <div key={club._id} className={styles.tableRow}>
+                <div>
+                  <strong>{club.name}</strong>
                 </div>
-                <div className={styles.clubInfo}>
-                  <h3>{club.name}</h3>
-                  <p>{club.description}</p>
-                </div>
-              </div>
-              
-              <div className={styles.clubActions}>
-                <div className={styles.enrollmentStatus}>
-                  <span className={styles.statusLabel}>Enrollment Status:</span>
-                  <span className={`${styles.status} ${club.enrollmentOpen ? styles.active : styles.inactive}`}>
-                    {club.enrollmentOpen ? 'Active' : 'Inactive'}
+                <div>{club.category}</div>
+                <div>
+                  <span className={`${styles.role} ${club.enrollmentOpen ? styles.roleStudent : styles.roleAdmin}`}>
+                    {club.enrollmentOpen ? 'Open' : 'Closed'}
                   </span>
                 </div>
-                
-                <button
-                  className={`${styles.toggleBtn} ${club.enrollmentOpen ? styles.deactivate : styles.activate}`}
-                  onClick={() => toggleEnrollment(club._id, club.enrollmentOpen)}
-                  disabled={updating[club._id]}
-                >
-                  {updating[club._id] ? 'Updating...' : 
-                   club.enrollmentOpen ? 'Deactivate Enrollment' : 'Activate Enrollment'}
-                </button>
+                <div>
+                  <button
+                    onClick={() => toggleEnrollment(club._id, club.enrollmentOpen)}
+                    disabled={!!updating[club._id]}
+                    className={club.enrollmentOpen ? styles.deleteBtn : styles.submitBtn}
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                  >
+                    {updating[club._id]
+                      ? 'Updating...'
+                      : club.enrollmentOpen
+                        ? 'Deactivate Enrollment'
+                        : 'Activate Enrollment'}
+                  </button>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>🏢</div>
+              <h3>No clubs found</h3>
+              <p>Create a club to manage enrollment.</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
+
     </div>
   )
 }

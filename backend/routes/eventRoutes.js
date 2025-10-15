@@ -379,6 +379,36 @@ router.post('/:id/register', auth, requireRole(['student']), async (req, res) =>
 
     event.registeredStudents.push(studentId);
     await event.save();
+
+    // Update event registration analytics (by year, branch, and student club)
+    try {
+      const dbUser = await require('../models/User').findById(studentId).select('year branch clubs');
+      const EventRegistrationStats = require('../models/EventRegistrationStats');
+      const statsModel = require('../models/EventRegistrationStats');
+      let stats = await EventRegistrationStats.findOne({ event: eventId });
+      if (!stats) {
+        stats = new statsModel({ event: eventId });
+      }
+      stats.totalRegistrations = (stats.totalRegistrations || 0) + 1;
+      if (dbUser?.year != null) {
+        const y = String(dbUser.year);
+        stats.byYear.set(y, (stats.byYear.get(y) || 0) + 1);
+      }
+      if (dbUser?.branch) {
+        const b = String(dbUser.branch);
+        stats.byBranch.set(b, (stats.byBranch.get(b) || 0) + 1);
+      }
+      if (dbUser?.clubs && dbUser.clubs.length) {
+        for (const c of dbUser.clubs) {
+          const key = String(c);
+          stats.byClub.set(key, (stats.byClub.get(key) || 0) + 1);
+        }
+      }
+      stats.updatedAt = new Date();
+      await stats.save();
+    } catch (analyticsErr) {
+      console.error('Error updating EventRegistrationStats:', analyticsErr.message);
+    }
     
     res.json({ message: 'Successfully registered for event' });
   } catch (error) {

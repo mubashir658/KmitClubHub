@@ -67,6 +67,11 @@ router.get('/statistics', async (req, res) => {
   }
 });
 
+// Admin create/update key routes should come before parameterized routes
+router.post('/admin/create', auth, requireRole('admin'), clubController.createClub);
+router.get('/admin/club-keys', auth, requireRole('admin'), clubController.getAllClubKeys);
+router.put('/admin/update-club-key/:clubId', auth, requireRole('admin'), clubController.updateClubKey);
+
 // Coordinator leave request management (must come before /:id routes)
 router.get('/leave-requests/pending', auth, requireRole(['coordinator']), (req, res, next) => {
   console.log('Leave requests pending route hit');
@@ -110,8 +115,6 @@ router.post('/:clubId/request-leave', auth, (req, res, next) => {
   next();
 }, clubController.requestLeaveClub);
 
-// Admin routes for club keys
-router.get('/admin/club-keys', auth, requireRole('admin'), clubController.getAllClubKeys);
-router.put('/admin/update-club-key/:clubId', auth, requireRole('admin'), clubController.updateClubKey);
+// (moved admin routes above)
 
 module.exports = router;

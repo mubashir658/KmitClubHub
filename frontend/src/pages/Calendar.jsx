@@ -314,6 +314,15 @@ const Calendar = () => {
                       {formatDate(event.date)}
                       {isNewEvent(event) && <span className={styles.newEventBadge}>NEW</span>}
                     </div>
+                    {event.imageUrl && event.imageUrl.trim() !== '' && (
+                      <div className={styles.eventThumb} onClick={() => openEventModal(event)}>
+                        <img 
+                          src={event.imageUrl} 
+                          alt={event.title}
+                          onError={(e) => { e.target.style.display = 'none' }}
+                        />
+                      </div>
+                    )}
                     <div className={styles.eventDetails}>
                       <h4 onClick={() => openEventModal(event)} className={styles.eventTitle}>
                         {event.title}

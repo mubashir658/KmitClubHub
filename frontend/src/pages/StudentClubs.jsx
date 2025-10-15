@@ -25,8 +25,8 @@ const StudentClubs = () => {
   const fetchData = async () => {
     try {
       const [clubsRes, allClubsRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/clubs"),
-        axios.get("http://localhost:5000/api/clubs")
+        axios.get("/api/clubs"),
+        axios.get("/api/clubs")
       ])
 
       setAllClubs(allClubsRes.data)
@@ -56,7 +56,7 @@ const StudentClubs = () => {
 
     setSubmittingLeave(true)
     try {
-      const response = await axios.post(`http://localhost:5000/api/clubs/${selectedClub._id}/request-leave`, { 
+      const response = await axios.post(`/api/clubs/${selectedClub._id}/request-leave`, { 
         reason: leaveReason 
       })
       showSuccess("Leave request submitted successfully! Waiting for coordinator approval.")
@@ -79,7 +79,7 @@ const StudentClubs = () => {
 
   const handleJoinClub = async (clubId) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/clubs/${clubId}/enroll`, {}, {
+      const response = await axios.post(`/api/clubs/${clubId}/enroll`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       showSuccess("Successfully joined the club!")

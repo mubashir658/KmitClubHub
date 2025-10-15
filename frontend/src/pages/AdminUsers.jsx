@@ -66,13 +66,23 @@ const AdminUsers = () => {
       filtered = filtered.filter(user => user.branch && user.branch.toLowerCase() === branchFilter.toLowerCase());
     }
 
-    // Filter by club
+    // Filter by club (students by joined clubs, coordinators by coordinatingClub)
     if (clubFilter !== 'all') {
-      filtered = filtered.filter(user => 
-        user.role === 'student' && 
-        user.clubs && 
-        user.clubs.includes(clubFilter)
-      );
+      filtered = filtered.filter(user => {
+        if (user.role === 'student') {
+          const clubIds = Array.isArray(user.clubs)
+            ? user.clubs.map(c => (typeof c === 'string' ? c : (c && (c._id || (c.toString && c.toString())))))
+            : [];
+          return clubIds.includes(clubFilter);
+        }
+        if (user.role === 'coordinator') {
+          const coordClubId = typeof user.coordinatingClub === 'string'
+            ? user.coordinatingClub
+            : (user.coordinatingClub && user.coordinatingClub._id);
+          return coordClubId === clubFilter;
+        }
+        return false;
+      });
     }
 
     setFilteredUsers(filtered);
@@ -272,6 +282,7 @@ const AdminUsers = () => {
     setRoleFilter('all');
     setYearFilter('all');
     setBranchFilter('all');
+    setClubFilter('all');
   };
 
   // Get active filters count
@@ -281,6 +292,7 @@ const AdminUsers = () => {
     if (roleFilter !== 'all') count++;
     if (yearFilter !== 'all') count++;
     if (branchFilter !== 'all') count++;
+    if (clubFilter !== 'all') count++;
     return count;
   };
 

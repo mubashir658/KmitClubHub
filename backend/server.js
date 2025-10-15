@@ -12,6 +12,8 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Increased limit for base64 images
+// Explicitly handle CORS preflight for all routes (helps with POST/PUT from dev server)
+app.options('*', cors());
 
 // Handle payload too large errors specifically
 app.use((err, req, res, next) => {
