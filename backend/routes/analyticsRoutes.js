@@ -41,9 +41,9 @@ router.get('/dashboard', auth, requireRole(['admin']), async (req, res) => {
       value: count
     }));
 
-    // Club-wise event distribution
+    // Club-wise event distribution (map admin-created events to 'All Club')
     const clubEventDistribution = events.reduce((acc, event) => {
-      const clubName = event.club?.name || 'Unknown Club';
+      const clubName = event.isForAllClubs ? 'All Club' : (event.club?.name || 'All Club');
       acc[clubName] = (acc[clubName] || 0) + 1;
       return acc;
     }, {});
@@ -196,7 +196,7 @@ router.get('/event-registration-composition/:eventId', auth, requireRole(['admin
     const idToName = new Map(clubs.map(c => [String(c._id), c.name]));
     const byClub = Array.from(s.byClub.entries()).map(([clubId, count]) => ({
       clubId,
-      club: idToName.get(String(clubId)) || 'All Clubs',
+      club: idToName.get(String(clubId)) || 'All Club',
       count,
       percent: total > 0 ? Math.round((count / total) * 100) : 0
     }));
@@ -385,7 +385,7 @@ router.get('/events-per-club', auth, requireRole(['admin']), async (req, res) =>
     }
 
     const clubEventCount = events.reduce((acc, event) => {
-      const clubName = event.club?.name || 'Unknown Club';
+      const clubName = event.isForAllClubs ? 'All Club' : (event.club?.name || 'All Club');
       acc[clubName] = (acc[clubName] || 0) + 1;
       return acc;
     }, {});
@@ -502,9 +502,10 @@ router.get('/insights', auth, requireRole(['admin']), async (req, res) => {
       User.find({ role: 'student', ...userClubQuery })
     ]);
 
-    // Find top performing club
-    const clubEventCount = events.reduce((acc, event) => {
-      const clubName = event.club?.name || 'Unknown Club';
+    // Find top performing club (exclude admin-wide "All Club" events)
+    const filteredForTop = events.filter(e => !e.isForAllClubs && e.club && e.club.name);
+    const clubEventCount = filteredForTop.reduce((acc, event) => {
+      const clubName = event.club.name;
       if (!acc[clubName]) {
         acc[clubName] = { events: 0, participants: 0 };
       }
@@ -540,10 +541,13 @@ router.get('/insights', auth, requireRole(['admin']), async (req, res) => {
       sum + (event.registeredStudents?.length || 0), 0);
     const averageAttendance = events.length > 0 ? Math.round(totalParticipants / events.length) : 0;
 
+    // No special normalization needed; this excludes 'All Club' from top computation
+    const topName = topClub ? topClub[0] : null;
+
     const insights = [
       {
         title: "Top Performing Club",
-        value: topClub ? topClub[0] : "N/A",
+        value: topName || "N/A",
         description: topClub ? `${topClub[1].events} events, ${topClub[1].participants} participants` : "No data available",
         icon: "🏆",
         color: "from-yellow-400 to-orange-500"
@@ -585,7 +589,7 @@ router.get('/recent-activity', auth, requireRole(['admin']), async (req, res) =>
 
     const recentActivity = events.map(event => ({
       date: event.createdAt,
-      club: event.club?.name || 'Unknown Club',
+    club: event.isForAllClubs ? 'All Club' : (event.club?.name || 'All Club'),
       action: `Event: ${event.title}`,
       participants: event.registeredStudents?.length || 0
     }));

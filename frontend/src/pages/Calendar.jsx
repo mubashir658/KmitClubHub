@@ -67,11 +67,48 @@ const Calendar = () => {
 
   const handleEventRegister = async (eventId) => {
     try {
+      // Guard: only register if not already registered
+      const target = events.find(ev => ev._id === eventId) || selectedEvent
+      if (target && isRegisteredForEvent(target)) {
+        showError("You are already registered for this event")
+        return
+      }
       await axios.post(`/api/events/${eventId}/register`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       showSuccess("Successfully registered for event!")
-      fetchEvents() // Refresh to show updated registration count
+      const currentUserId = getCurrentUserId()
+      // Optimistically update events list
+      setEvents((prev) => prev.map((ev) => {
+        if (ev._id !== eventId) return ev
+        const already = (ev.registeredStudents || []).some((s) => normalizeId(s) === currentUserId)
+        if (already) return ev
+        const updated = {
+          ...ev,
+          registeredStudents: [...(ev.registeredStudents || []), { _id: currentUserId }]
+        }
+        return updated
+      }))
+      // Optimistically update modal selection
+      setSelectedEvent((prev) => {
+        if (!prev || prev._id !== eventId) return prev
+        const already = (prev.registeredStudents || []).some((s) => normalizeId(s) === currentUserId)
+        if (already) return prev
+        return {
+          ...prev,
+          registeredStudents: [...(prev.registeredStudents || []), { _id: currentUserId }]
+        }
+      })
+      // Refresh this specific event from server to avoid transient mismatch
+      try {
+        const { data: updated } = await axios.get(`/api/events/${eventId}`)
+        setSelectedEvent((prev) => (prev && prev._id === eventId ? updated : prev))
+        setEvents((prev) => prev.map((ev) => (ev._id === eventId ? { ...ev, ...updated } : ev)))
+      } catch (_) {
+        // ignore detail refresh failure; optimistic state already applied
+      }
+      // Optional: refresh all events in the background
+      setTimeout(() => { fetchEvents() }, 0)
     } catch (error) {
       showError(error.response?.data?.message || "Failed to register for event")
     }
@@ -79,11 +116,39 @@ const Calendar = () => {
 
   const handleEventUnregister = async (eventId) => {
     try {
+      // Guard: only unregister if currently registered
+      const target = events.find(ev => ev._id === eventId) || selectedEvent
+      if (target && !isRegisteredForEvent(target)) {
+        showError("You are not registered for this event")
+        return
+      }
       await axios.delete(`/api/events/${eventId}/register`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       showSuccess("Successfully unregistered from event!")
-      fetchEvents() // Refresh to show updated registration count
+      const currentUserId = getCurrentUserId()
+      // Optimistically update events list
+      setEvents((prev) => prev.map((ev) => {
+        if (ev._id !== eventId) return ev
+        const filtered = (ev.registeredStudents || []).filter((s) => normalizeId(s) !== currentUserId)
+        return { ...ev, registeredStudents: filtered }
+      }))
+      // Optimistically update modal selection
+      setSelectedEvent((prev) => {
+        if (!prev || prev._id !== eventId) return prev
+        const filtered = (prev.registeredStudents || []).filter((s) => normalizeId(s) !== currentUserId)
+        return { ...prev, registeredStudents: filtered }
+      })
+      // Refresh this specific event from server to avoid transient mismatch
+      try {
+        const { data: updated } = await axios.get(`/api/events/${eventId}`)
+        setSelectedEvent((prev) => (prev && prev._id === eventId ? updated : prev))
+        setEvents((prev) => prev.map((ev) => (ev._id === eventId ? { ...ev, ...updated } : ev)))
+      } catch (_) {
+        // ignore detail refresh failure; optimistic state already applied
+      }
+      // Optional: refresh all events in the background
+      setTimeout(() => { fetchEvents() }, 0)
     } catch (error) {
       showError(error.response?.data?.message || "Failed to unregister from event")
     }
@@ -107,8 +172,30 @@ const Calendar = () => {
     }
   }
 
+  const getCurrentUserId = () => (user?.id || user?._id || null)
+
+  const normalizeId = (value) => {
+    if (!value) return null
+    if (typeof value === 'string') return value
+    if (typeof value === 'object') {
+      if (value._id && typeof value._id === 'string') return value._id
+      if (typeof value.toString === 'function') return value.toString()
+    }
+    return null
+  }
+
   const isRegisteredForEvent = (event) => {
-    return user && event.registeredStudents?.some(student => student._id === user.id)
+    const currentUserId = getCurrentUserId()
+    if (!currentUserId) return false
+    const list = event?.registeredStudents || []
+    return list.some((entry) => normalizeId(entry) === currentUserId)
+  }
+
+  const getDayRegistrationStatus = (dayEvents) => {
+    if (!dayEvents || dayEvents.length === 0) return 'none'
+    // Green if registered for at least one event on this day; otherwise red
+    const anyRegistered = dayEvents.some(ev => isRegisteredForEvent(ev))
+    return anyRegistered ? 'registered' : 'unregistered'
   }
 
   // Check if student can register for this event
@@ -263,9 +350,15 @@ const Calendar = () => {
                 const day = i + 1
                 const dayEvents = getEventsForDay(day)
                 const hasNewEvents = dayEvents.some(event => isNewEvent(event))
-                
+                const dayStatus = getDayRegistrationStatus(dayEvents)
+                const dayClass = dayStatus === 'registered' 
+                  ? styles.dayRegistered 
+                  : dayStatus === 'unregistered' 
+                    ? styles.dayUnregistered 
+                    : ''
+
                 return (
-                  <div key={day} className={styles.day}>
+                  <div key={day} className={`${styles.day} ${dayClass}`}>
                     <div className={`${styles.dayNumber} ${hasNewEvents ? styles.newEventDay : ''}`}>
                       {day}
                       {hasNewEvents && <span className={styles.newEventIndicator}>●</span>}

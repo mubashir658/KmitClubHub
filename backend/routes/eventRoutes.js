@@ -342,6 +342,7 @@ router.post('/:id/register', auth, requireRole(['student']), async (req, res) =>
   try {
     const eventId = req.params.id;
     const studentId = req.user.id;
+    const studentIdStr = String(studentId);
 
     const event = await Event.findById(eventId);
     if (!event) {
@@ -356,8 +357,12 @@ router.post('/:id/register', auth, requireRole(['student']), async (req, res) =>
       return res.status(400).json({ message: 'Registrations are currently closed for this event' });
     }
 
-    // Check if student is already registered
-    if (event.registeredStudents.includes(studentId)) {
+    // Check if student is already registered (normalize comparison)
+    const alreadyRegistered = (event.registeredStudents || []).some((id) => {
+      const current = typeof id === 'string' ? id : id?.toString();
+      return current === studentIdStr;
+    });
+    if (alreadyRegistered) {
       return res.status(400).json({ message: 'Already registered for this event' });
     }
 
@@ -421,16 +426,27 @@ router.delete('/:id/register', auth, requireRole(['student']), async (req, res) 
   try {
     const eventId = req.params.id;
     const studentId = req.user.id;
+    const studentIdStr = String(studentId);
 
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    // Remove student from registered list
-    event.registeredStudents = event.registeredStudents.filter(
-      id => id.toString() !== studentId
-    );
+    // Ensure student is currently registered
+    const isRegistered = (event.registeredStudents || []).some((id) => {
+      const current = typeof id === 'string' ? id : id?.toString();
+      return current === studentIdStr;
+    });
+    if (!isRegistered) {
+      return res.status(400).json({ message: 'You are not registered for this event' });
+    }
+
+    // Remove student from registered list (normalize comparison to strings)
+    event.registeredStudents = (event.registeredStudents || []).filter((id) => {
+      const current = typeof id === 'string' ? id : id?.toString();
+      return current !== studentIdStr;
+    });
     await event.save();
     
     res.json({ message: 'Successfully unregistered from event' });

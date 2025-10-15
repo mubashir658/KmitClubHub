@@ -178,6 +178,14 @@
   position: relative;
 }
 
+.dayRegistered {
+  background: #eaf7ef; /* soft green */
+}
+
+.dayUnregistered {
+  background: #fdeaea; /* soft red */
+}
+
 .day:nth-child(7n) {
   border-right: none;
 }
