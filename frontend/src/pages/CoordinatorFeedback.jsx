@@ -31,7 +31,7 @@ const CoordinatorFeedback = () => {
   const fetchClubFeedback = async () => {
     try {
       setLoading(true)
-      const response = await axios.get("http://localhost:5000/api/feedback/club", {
+      const response = await axios.get("/api/feedback/club", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       console.log("Fetched club feedback:", response.data)
@@ -63,7 +63,7 @@ const CoordinatorFeedback = () => {
 
   const handleFeedbackAction = async (feedbackId, action) => {
     try {
-      await axios.put(`http://localhost:5000/api/feedback/${feedbackId}/action`, { action }, {
+      await axios.put(`/api/feedback/${feedbackId}/action`, { action }, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       alert(`Feedback ${action}d successfully!`)
@@ -78,7 +78,7 @@ const CoordinatorFeedback = () => {
     setSubmitting(true)
 
     try {
-      await axios.post("http://localhost:5000/api/feedback/admin", adminFeedback, {
+      await axios.post("/api/feedback/admin", adminFeedback, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       alert("Feedback sent to admin successfully!")

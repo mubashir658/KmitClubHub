@@ -18,6 +18,7 @@ const CoordinatorProfile = () => {
     confirmPassword: ""
   })
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState({ current: false, next: false, confirm: false })
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const [activeTab, setActiveTab] = useState("profile")
@@ -333,20 +334,31 @@ const CoordinatorProfile = () => {
                 
                 <div className={styles.formGroup}>
                   <label htmlFor="currentPassword">Current Password</label>
+                  <div style={{ position: 'relative' }}>
                   <input
-                    type="password"
+                    type={showPassword.current ? "text" : "password"}
                     id="currentPassword"
                     name="currentPassword"
                     value={passwordData.currentPassword}
                     onChange={handlePasswordChange}
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => ({ ...prev, current: !prev.current }))}
+                    aria-label={showPassword.current ? "Hide password" : "Show password"}
+                    style={{ position: 'absolute', right: 10, top: 8, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  >
+                    {showPassword.current ? '🙈' : '👁️'}
+                  </button>
+                  </div>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label htmlFor="newPassword">New Password</label>
+                  <div style={{ position: 'relative' }}>
                   <input
-                    type="password"
+                    type={showPassword.next ? "text" : "password"}
                     id="newPassword"
                     name="newPassword"
                     value={passwordData.newPassword}
@@ -354,12 +366,22 @@ const CoordinatorProfile = () => {
                     required
                     minLength="6"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => ({ ...prev, next: !prev.next }))}
+                    aria-label={showPassword.next ? "Hide password" : "Show password"}
+                    style={{ position: 'absolute', right: 10, top: 8, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  >
+                    {showPassword.next ? '🙈' : '👁️'}
+                  </button>
+                  </div>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label htmlFor="confirmPassword">Confirm New Password</label>
+                  <div style={{ position: 'relative' }}>
                   <input
-                    type="password"
+                    type={showPassword.confirm ? "text" : "password"}
                     id="confirmPassword"
                     name="confirmPassword"
                     value={passwordData.confirmPassword}
@@ -367,6 +389,15 @@ const CoordinatorProfile = () => {
                     required
                     minLength="6"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => ({ ...prev, confirm: !prev.confirm }))}
+                    aria-label={showPassword.confirm ? "Hide password" : "Show password"}
+                    style={{ position: 'absolute', right: 10, top: 8, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  >
+                    {showPassword.confirm ? '🙈' : '👁️'}
+                  </button>
+                  </div>
                 </div>
 
                 <div className={styles.formActions}>

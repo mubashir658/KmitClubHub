@@ -40,7 +40,7 @@ const StudentFeedback = () => {
     setLoading(true)
 
     try {
-      await axios.post("http://localhost:5000/api/feedback", formData, {
+      await axios.post("/api/feedback", formData, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       alert("Feedback submitted successfully!")

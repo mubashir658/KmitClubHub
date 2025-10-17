@@ -24,7 +24,7 @@ const CoordinatorPolls = () => {
       // First try to get club using coordinatingClub field
       if (user.coordinatingClub) {
         try {
-          const clubResponse = await axios.get(`http://localhost:5000/api/clubs/${user.coordinatingClub}`)
+          const clubResponse = await axios.get(`/api/clubs/${user.coordinatingClub}`)
           coordinatorClub = clubResponse.data
           console.log('Found club via coordinatingClub field:', coordinatorClub.name)
         } catch (error) {
@@ -37,7 +37,7 @@ const CoordinatorPolls = () => {
         console.log('No coordinatingClub found or invalid, trying alternative approach...')
         
         // Get all clubs and find the one this coordinator manages
-        const clubsResponse = await axios.get('http://localhost:5000/api/clubs')
+        const clubsResponse = await axios.get('/api/clubs')
         coordinatorClub = clubsResponse.data.find(club => 
           club.coordinators && club.coordinators.includes(user._id)
         )
@@ -67,7 +67,7 @@ const CoordinatorPolls = () => {
     if (!club) return
     
     try {
-      const res = await axios.get(`http://localhost:5000/api/polls/club`, { 
+      const res = await axios.get(`/api/polls/club`, { 
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } 
       })
       setPolls(res.data)
@@ -85,7 +85,7 @@ const CoordinatorPolls = () => {
   const vote = async (pollId, optionId, refreshClub = false, refreshActive = false) => {
     try {
       await axios.post(
-        `http://localhost:5000/api/polls/${pollId}/vote`,
+        `/api/polls/${pollId}/vote`,
         { optionId },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       )
@@ -99,7 +99,7 @@ const CoordinatorPolls = () => {
 
   const loadActiveForCoordinator = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/polls/active`, {
+      const res = await axios.get(`/api/polls/active`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       setActivePolls(res.data)
@@ -113,7 +113,7 @@ const CoordinatorPolls = () => {
     if (!window.confirm('Delete this poll?')) return
     setDeleting(pollId)
     try {
-      await axios.delete(`http://localhost:5000/api/polls/${pollId}`, {
+      await axios.delete(`/api/polls/${pollId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       await load()
@@ -156,7 +156,7 @@ const CoordinatorPolls = () => {
     }
     try {
       await axios.post(
-        "http://localhost:5000/api/polls/club",
+        "/api/polls/club",
         { 
           question: form.question, 
           options: cleanOptions
