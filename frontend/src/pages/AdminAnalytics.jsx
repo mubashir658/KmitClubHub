@@ -18,6 +18,8 @@ import {
 } from "recharts"
 import styles from "./AdminAnalytics.module.css"
 
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || ""
+
 const AdminAnalytics = () => {
   const { user } = useAuth()
   const [selectedClub, setSelectedClub] = useState("all")
@@ -58,10 +60,10 @@ const AdminAnalytics = () => {
 
   const fetchClubs = async () => {
     try {
-      const response = await axios.get("/api/clubs")
+      const response = await axios.get(`${API_BASE}/api/clubs`)
       setClubs(response.data)
       // Build event options list (approved and upcoming) for selection
-      const eventsResp = await axios.get('/api/events')
+      const eventsResp = await axios.get(`${API_BASE}/api/events`)
       const opts = eventsResp.data.map(e => ({ id: e._id, title: e.title }))
       setEventOptions(opts)
     } catch (error) {
@@ -84,22 +86,22 @@ const AdminAnalytics = () => {
         insightsRes,
         activityRes,
       ] = await Promise.all([
-        axios.get(`/api/admin/analytics/summary${clubFilter}`, {
+        axios.get(`${API_BASE}/api/admin/analytics/summary${clubFilter}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }),
-        axios.get(`/api/admin/analytics/events-per-club${clubFilter}`, {
+        axios.get(`${API_BASE}/api/admin/analytics/events-per-club${clubFilter}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }),
-        axios.get(`/api/admin/analytics/student-growth${clubFilter}`, {
+        axios.get(`${API_BASE}/api/admin/analytics/student-growth${clubFilter}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }),
-        axios.get(`/api/admin/analytics/student-distribution${clubFilter}`, {
+        axios.get(`${API_BASE}/api/admin/analytics/student-distribution${clubFilter}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }),
-        axios.get(`/api/admin/analytics/insights${clubFilter}`, {
+        axios.get(`${API_BASE}/api/admin/analytics/insights${clubFilter}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }),
-        axios.get(`/api/admin/analytics/recent-activity${clubFilter}`, {
+        axios.get(`${API_BASE}/api/admin/analytics/recent-activity${clubFilter}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }),
       ])
@@ -113,7 +115,7 @@ const AdminAnalytics = () => {
 
       // If an event is selected, fetch its composition
       if (selectedEventId) {
-        const compRes = await axios.get(`/api/admin/analytics/event-registration-composition/${selectedEventId}`, {
+        const compRes = await axios.get(`${API_BASE}/api/admin/analytics/event-registration-composition/${selectedEventId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         })
         setEventComposition(compRes.data)
@@ -350,7 +352,7 @@ const AdminAnalytics = () => {
               const id = e.target.value
               setSelectedEventId(id)
               if (id) {
-                const compRes = await axios.get(`/api/admin/analytics/event-registration-composition/${id}`, {
+                const compRes = await axios.get(`${API_BASE}/api/admin/analytics/event-registration-composition/${id}`, {
                   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                 })
                 setEventComposition(compRes.data)
