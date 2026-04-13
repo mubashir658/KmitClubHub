@@ -32,6 +32,7 @@ import AdminEvents from "./pages/AdminEvents"
 import AdminAnalytics from "./pages/AdminAnalytics"
 import CoordinatorProfile from "./components/CoordinatorProfile"
 import CoordinatorUsers from "./pages/CoordinatorUsers"
+import ChatWidget from "./components/ChatWidget.jsx"
 
 function App() {
   return (
@@ -122,6 +123,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
+          <ChatWidget />
           <Footer />
         </div>
         </Router>

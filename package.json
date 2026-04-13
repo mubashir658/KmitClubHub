@@ -22,7 +22,6 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.532.0",
     "mongoose": "^8.16.5",
-    "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.7.1",
