@@ -141,6 +141,13 @@ const CoordinatorDashboard = () => {
           </div>
         </Link>
 
+        <Link to="/coordinator/gallery" className={styles.functionCard}>
+          <div className={styles.cardContent}>
+            <h3>Gallery Management</h3>
+            <p>Add and manage club photos</p>
+            <div className={styles.cardIcon}>🖼️</div>
+          </div>
+        </Link>
         <Link to="/coordinator/profile" className={styles.functionCard}>
           <div className={styles.cardContent}>
             <h3>🧾 My Profile</h3>

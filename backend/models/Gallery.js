@@ -22,6 +22,10 @@ const gallerySchema = new mongoose.Schema({
   uploadedAt: {
     type: Date,
     default: Date.now
+  },
+  approved: {
+    type: Boolean,
+    default: false
   }
 });
 

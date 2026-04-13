@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import axios from "axios"
 import styles from "./Images.module.css"
 
 const sampleEvents = [
@@ -52,25 +53,26 @@ const sampleEvents = [
   }
 ]
 
-const sampleImages = [
-  "/eventpics/2.jpg",
-  "/eventpics/12.jpg",
-  "/eventpics/7.jpg",
-  "/eventpics/13.jpg",
-  "/eventpics/1.jpg",
-  "/eventpics/14.jpg",
-  "/eventpics/11.jpg",
-  "/eventpics/6.jpg",
-  "/eventpics/5.jpg"
-]
-
+// Keeping sampleEvents for backward compatibility with google drive links
 const Images = () => {
   const [events, setEvents] = useState([])
+  const [galleryImages, setGalleryImages] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setEvents(sampleEvents)
-    setLoading(false)
+    const fetchImages = async () => {
+      try {
+        const res = await axios.get('/api/gallery')
+        setGalleryImages(res.data.images || [])
+      } catch (err) {
+        console.error("Failed to fetch gallery images:", err)
+      } finally {
+        setEvents(sampleEvents)
+        setLoading(false)
+      }
+    }
+    
+    fetchImages()
   }, [])
 
   if (loading) {
@@ -88,14 +90,16 @@ const Images = () => {
         {/* Display sample images above the cards */}
         <section className={styles.sampleImagesSection}>
           <div className={styles.sampleImagesGrid}>
-            {sampleImages.map((img, idx) => (
+            {galleryImages.length > 0 ? galleryImages.map((img, idx) => (
               <img
-                key={idx}
-                src={img}
-                alt={`Sample ${idx + 1}`}
+                key={img._id || idx}
+                src={img.imageUrl || img.url || img.src}
+                alt={img.caption || `Gallery ${idx + 1}`}
                 className={styles.sampleImage}
               />
-            ))}
+            )) : (
+              <p>No gallery images uploaded yet.</p>
+            )}
           </div>
         </section>
 

@@ -32,6 +32,7 @@ import AdminEvents from "./pages/AdminEvents"
 import AdminAnalytics from "./pages/AdminAnalytics"
 import CoordinatorProfile from "./components/CoordinatorProfile"
 import CoordinatorUsers from "./pages/CoordinatorUsers"
+import CoordinatorGallery from "./pages/CoordinatorGallery"
 
 function App() {
   return (
@@ -77,6 +78,7 @@ function App() {
                       <Route path="" element={<CoordinatorDashboard />} />
                       <Route path="members" element={<CoordinatorMembers />} />
                       <Route path="events" element={<CoordinatorEvents />} />
+                      <Route path="gallery" element={<CoordinatorGallery />} />
                       <Route path="feedback" element={<CoordinatorFeedback />} />
                       <Route path="polls" element={<CoordinatorPolls />} />
                       <Route path="profile" element={<CoordinatorProfile />} />

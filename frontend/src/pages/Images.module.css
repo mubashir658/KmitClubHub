@@ -161,3 +161,73 @@
     font-size: 1rem;
   }
 }
+
+/* ---------- UPLOAD / BUTTON STYLES FOR COORDINATOR GALLERY ---------- */
+.uploadArea {
+  margin-bottom: 32px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(34,41,47,0.04);
+}
+.uploadRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.fileInput {
+  display: none;
+}
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg,#667eea,#6b46c1);
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(102,126,234,0.18);
+}
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btnDanger {
+  background: #ff6b6b;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.previewList {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.previewThumb {
+  width: 84px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(34,41,47,0.06);
+}
+.statusMsg {
+  margin-top: 10px;
+  color: #2d3748;
+  font-weight: 600;
+}
+.errorMsg {
+  margin-top: 8px;
+  color: #c53030;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .previewThumb { width: 68px; height: 48px }
+}
