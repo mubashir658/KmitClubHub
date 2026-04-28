@@ -1,93 +1,56 @@
 # KMIT Club Hub
 
-A comprehensive club management system for Keshav Memorial Institute of Technology.
+A comprehensive, centralized club management system for Keshav Memorial Institute of Technology. Designed to streamline club activities, event registrations, and communication between students, club coordinators, and administrators.
 
-## Features
+## 🚀 Key Features
 
-### Public Pages (No Login Required)
-- **Home Page**: Welcome page with club overview and recent events
-- **Images/Gallery**: View photos from events and activities
-- **Calendar**: Interactive calendar showing upcoming events
+### User Roles & Authentication
+- **Role-Based Access Control (RBAC):** Unified user management system supporting **Student**, **Coordinator**, and **Admin** roles.
+- **Secure Authentication:** JWT-based authentication with bcrypt password hashing.
+- **Role-Specific Dashboards:** Tailored UI experiences depending on the logged-in user's role.
 
-### Authentication System
-- **Role-Based Login**: Separate login for Student, Coordinator, and Admin roles
-- **Role Selection**: Users first select their role, then login
-- **Separate Collections**: Each role has its own MongoDB collection
-- **Simplified Student Registration**: Only requires name, email, roll number, and password
-- **Secure Authentication**: JWT-based authentication with proper password hashing
+### Club & Event Management
+- **Centralized Hub:** View all active clubs, their descriptions, and executive teams.
+- **Event Lifecycle:** Coordinators can propose events, Admins approve them, and Students register.
+- **Dynamic Calendar:** Interactive calendar showing all upcoming, approved events.
+- **Public & Private Galleries:** Curated image galleries for clubs.
 
-### User Roles
+### Communication & Engagement
+- **Interactive Polls:** Clubs can create polls for members to vote and gather feedback.
+- **Feedback System:** Dedicated channels for general inquiries, complaints, and appreciations.
+- **Live Notifications:** Alerts for event updates, poll creations, and feedback responses.
 
-#### Student
-- **Simple Registration**: Name, email, roll number, and password only
-- **Collection**: `students` in MongoDB
-- View clubs and events
-- Request club membership
-- Register for events
-- Access student dashboard
+### 🤖 Local AI RAG Chatbot
+A standout feature of KMIT Club Hub is the built-in, fully local AI Assistant.
+- Powered by `@xenova/transformers` running directly in the Node.js process.
+- **No External Dependencies:** Uses an in-memory vector store (no need for Pinecone or external vector DBs).
+- **Retrieval-Augmented Generation (RAG):** Automatically ingests live club data, event schedules, and FAQs from MongoDB, providing users with instant, accurate answers about campus activities.
 
-#### Coordinator
-- **Collection**: `coordinators` in MongoDB
-- Manage club details
-- Create and manage events
-- Handle membership requests
-- Access coordinator dashboard
+---
 
-#### Admin
-- **Collection**: `admins` in MongoDB
-- Full system access
-- Approve events and clubs
-- Manage all users
-- Access admin dashboard
+## 🏗 System Architecture
 
-## Application Structure
+KMIT Club Hub is built on the **MERN** stack (MongoDB, Express, React, Node.js).
 
-### Frontend (React + Vite)
-```
-frontend/
-├── src/
-│   ├── components/
-│   │   ├── Navbar.jsx          # Navigation with Home, Images, Calendar, Login
-│   │   ├── ClubCard.jsx        # Club display cards
-│   │   └── ProtectedRoute.jsx  # Route protection
-│   ├── pages/
-│   │   ├── Home.jsx           # Public home page
-│   │   ├── RoleSelect.jsx     # Role selection before login
-│   │   ├── Login.jsx          # Role-specific login page
-│   │   ├── Signup.jsx         # Simplified student registration
-│   │   ├── Images.jsx         # Gallery page
-│   │   ├── Calendar.jsx       # Event calendar
-│   │   └── ClubDetail.jsx     # Club details (requires login)
-│   └── context/
-│       └── AuthContext.jsx    # Authentication state management
-```
+### Tech Stack
+- **Frontend:** React.js, Vite, Tailwind CSS, CSS Modules, React Router, Context API.
+- **Backend:** Node.js, Express.js.
+- **Database:** MongoDB Atlas, Mongoose ODM.
+- **AI / Machine Learning:** Hugging Face local pipelines (`all-MiniLM-L6-v2`).
 
-### Backend (Node.js + Express)
-```
-backend/
-├── controllers/
-│   ├── authController.js      # Role-based authentication logic
-│   ├── clubController.js      # Club management
-│   └── eventController.js     # Event management
-├── models/
-│   ├── Student.js            # Student model (students collection)
-│   ├── Coordinator.js        # Coordinator model (coordinators collection)
-│   ├── Admin.js              # Admin model (admins collection)
-│   ├── Club.js               # Club model
-│   └── Event.js              # Event model
-├── routes/
-│   ├── authRoutes.js         # Authentication endpoints
-│   ├── clubRoutes.js         # Club endpoints
-│   └── eventRoutes.js        # Event endpoints
-└── utils/
-    └── middleware.js         # Authentication middleware
-```
+### High-Level Flow
+1. **Client Tier:** React SPA communicates with the backend via RESTful APIs.
+2. **API Layer:** Express routes intercepted by JWT/Role-based middleware.
+3. **Data Layer:** Mongoose models enforce schema validation and relationships.
+4. **AI Layer:** A background chron-job synchronizes the MongoDB data with the local vector memory to keep chatbot responses up to date.
 
-## Getting Started
+---
+
+## 🛠 Getting Started
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB
+- Node.js (v18 or higher recommended)
+- MongoDB (Local or Atlas cluster)
 - npm or yarn
 
 ### Installation
@@ -95,152 +58,52 @@ backend/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd my-app
+   cd KmitClubHub
    ```
 
-2. **Install backend dependencies**
+2. **Backend Setup**
    ```bash
    cd backend
    npm install
    ```
+   Create a `.env` file in the `backend` directory:
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/kmitclubhub
+   PORT=5000
+   JWT_SECRET=your_jwt_secret_here
+   ```
+   Start the backend server:
+   ```bash
+   npm run dev
+   ```
 
-3. **Install frontend dependencies**
+3. **Frontend Setup**
    ```bash
    cd ../frontend
    npm install
    ```
-
-4. **Environment Setup**
-   Create a `.env` file in the backend directory:
-   ```env
-   MONGODB_URI=mongodb://localhost:27017/kmit-club-hub
-   JWT_SECRET=your-secret-key-here
-   PORT=5000
-   ```
-
-5. **Seed Test Users** (Optional)
+   Start the frontend development server:
    ```bash
-   cd backend
-   node seed-users.js
-   ```
-
-6. **Start the backend server**
-   ```bash
-   cd backend
    npm run dev
    ```
 
-7. **Start the frontend development server**
-```bash
-   cd frontend
-npm run dev
-   ```
+The application will be available at `http://localhost:5173`.
 
-## API Endpoints
+---
 
-### Authentication
-- `POST /api/auth/register` - Student registration (simplified)
-- `POST /api/auth/login` - Role-based login (requires role parameter)
-- `GET /api/auth/profile` - Get user profile (protected)
+## 🗄 Database Design
 
-### Clubs
-- `GET /api/clubs` - Get all clubs
-- `GET /api/clubs/:id` - Get club by ID
-- `POST /api/clubs` - Create club (admin only)
-- `POST /api/clubs/:clubId/join` - Request membership (student only)
+The system relies heavily on a relational structure implemented in NoSQL via Mongoose `ObjectIds`.
+*   **Users:** Single collection governing Students, Coordinators, and Admins via the `role` enum.
+*   **Clubs & Events:** Core entities. Clubs have a 1-to-Many relationship with Events.
+*   **Engagement:** Polls, Feedback, and Gallery models link back to specific Clubs and Users.
+*   **Transactions:** Collections like `LeaveRequest` and `MembershipApproval` track state changes.
 
-### Events
-- `GET /api/events` - Get all events
-- `GET /api/events/:id` - Get event by ID
-- `POST /api/events` - Create event (coordinator only)
-- `POST /api/events/:eventId/register` - Register for event (student only)
+---
 
-## Authentication Flow
+## 🤝 Contributing
 
-1. **Public Access**: Users can browse Home, Images, and Calendar without login
-2. **Login Process**: 
-   - Click "Login" in navbar → Role selection page
-   - Select role (Student/Coordinator/Admin) → Login form for that role
-   - Enter credentials → Role-specific dashboard
-3. **Registration**: Students can sign up with minimal information
-4. **Protected Access**: Club details and dashboards require authentication
-5. **Role-Based Routing**: After login, users are redirected to their appropriate dashboard
-6. **Session Management**: JWT tokens are stored in localStorage for persistent sessions
+Contributions, issues, and feature requests are welcome!
 
-## Student Registration Form
-
-The student registration form is simplified and only requires:
-- **Full Name**: Student's complete name
-- **Email Address**: Valid email for account access
-- **Roll Number**: Student's unique roll number
-- **Password**: Secure password (minimum 6 characters)
-- **Confirm Password**: Password confirmation
-
-## Database Collections
-
-### Students Collection
-```javascript
-{
-  name: String,
-  email: String (unique),
-  passwordHash: String,
-  rollNo: String (unique),
-  createdAt: Date
-}
-```
-
-### Coordinators Collection
-```javascript
-{
-  name: String,
-  email: String (unique),
-  passwordHash: String,
-  club: String,
-  createdAt: Date
-}
-```
-
-### Admins Collection
-```javascript
-{
-  name: String,
-  email: String (unique),
-  passwordHash: String,
-  createdAt: Date
-}
-```
-
-## Security Features
-
-- Password hashing using bcrypt
-- JWT token-based authentication
-- Role-based access control
-- Separate collections for each role
-- Protected routes with automatic redirects
-- Input validation and sanitization
-- Duplicate email prevention across all collections
-- Duplicate roll number prevention for students
-
-## Test Users
-
-After running the seed script, you can test with these credentials:
-
-### Students
-- `test.student1@kmit.com` / `password123`
-- `test.student2@kmit.com` / `password123`
-
-### Coordinators
-- `test.coordinator1@kmit.com` / `password123`
-- `test.coordinator2@kmit.com` / `password123`
-
-### Admins
-- `test.admin1@kmit.com` / `password123`
-- `test.admin2@kmit.com` / `password123`
-
-## Technologies Used
-
-- **Frontend**: React, Vite, Tailwind CSS
-- **Backend**: Node.js, Express, MongoDB, Mongoose
-- **Authentication**: JWT, bcrypt
-- **File Upload**: express-fileupload
-- **Validation**: express-validator
+---
+*Developed for Keshav Memorial Institute of Technology.*
