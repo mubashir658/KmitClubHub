@@ -27,8 +27,14 @@ app.use((err, req, res, next) => {
 });
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/kmitclubhub';
+const ragService = require('./utils/ragService');
+
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(() => {
+    console.log('MongoDB connected successfully');
+    // Initialize RAG Vector Index
+    ragService.init().catch(err => console.error('Failed to init RAG service:', err));
+  })
   .catch((err) => console.error('MongoDB connection error:', err));
 
 console.log('MONGODB_URI:', MONGODB_URI);
@@ -41,6 +47,7 @@ app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/gallery', require('./routes/galleryRoutes'));
 app.use('/api/admin/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 app.get('/api/health', (req, res) => {
   res.json({ 

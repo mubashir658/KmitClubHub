@@ -135,6 +135,35 @@ const Home = () => {
           )}
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <section className={styles.faqSection}>
+        <div className="container">
+          <h2 className={styles.faqHeader}>Frequently Asked Questions</h2>
+          <div className={styles.faqContainer}>
+            <details className={styles.faqItem}>
+              <summary className={styles.faqQuestion}>Can I join multiple clubs at once?</summary>
+              <div className={styles.faqAnswer}>Yes, students are welcome to join multiple clubs based on their interests and manage them from their Student Dashboard.</div>
+            </details>
+            <details className={styles.faqItem}>
+              <summary className={styles.faqQuestion}>Are there any membership fees for clubs?</summary>
+              <div className={styles.faqAnswer}>No, all clubs at KMIT are completely free to join.</div>
+            </details>
+            <details className={styles.faqItem}>
+              <summary className={styles.faqQuestion}>How do I register for an upcoming event?</summary>
+              <div className={styles.faqAnswer}>Once approved by the club coordinator, you can register for events from the Events section or Calendar page on your dashboard.</div>
+            </details>
+            <details className={styles.faqItem}>
+              <summary className={styles.faqQuestion}>Can I leave a club if I no longer wish to participate?</summary>
+              <div className={styles.faqAnswer}>Yes, you can leave a club at any time directly from your Student Dashboard.</div>
+            </details>
+            <details className={styles.faqItem}>
+              <summary className={styles.faqQuestion}>How will I receive updates about club activities?</summary>
+              <div className={styles.faqAnswer}>Notifications about event registrations, club join approvals, and new announcements will automatically appear in your dashboard.</div>
+            </details>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

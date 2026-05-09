@@ -7,49 +7,49 @@ const sampleEvents = [
     url: "https://drive.google.com/drive/folders/1GfBkywWVIzd-9Qyvyy9FS6Lq26-qJDXc",
     eventName: "Navras 2025",
     date: "2025-09-27",
-    image: "/eventpics/nav1.jpg"
+    image: "/eventpics/nav1.webp"
   },
   {
     url: "https://drive.google.com/drive/folders/1QrqsGpRQQVsxhQNG5Yvoy7AqhJodnv5u",
     eventName: "Saanjh 2025",
     date: "2025-04-11",
-    image: "/eventpics/10.jpg"
+    image: "/eventpics/10.webp"
   },
   {
     url: "https://drive.google.com/drive/folders/1xHgSxi02FYV7LgRxzU4Q8m43pC9pRUgW",
     eventName: "Patang Utsav 2025",
     date: "2025-01-22",
-    image: "/eventpics/pat1.jpg"
+    image: "/eventpics/pat1.webp"
   },
   {
     url: "https://drive.google.com/drive/folders/1t0AFF1suM-SYTFVx7dnJ-DpHMMBzVtLR",
     eventName: "Navras 2024",
     date: "2024-10-13",
-    image: "/eventpics/nav2.jpg"
+    image: "/eventpics/nav2.webp"
   },
   {
     url: "https://drive.google.com/drive/folders/1yzhP7K1DO4v-Kz5J62iwg9P_X4n4mYg0",
     eventName: "Nexus 2024",
     date: "2024-04-10",
-    image: "/eventpics/9.jpg"
+    image: "/eventpics/9.webp"
   },
   {
     url: "https://drive.google.com/drive/folders/1ejAl45ycpUECPsgJXYBYBo198XE9liv_",
     eventName: "Patang Utsav 2024",
     date: "2024-01-13",
-    image: "/eventpics/pat2.jpg"
+    image: "/eventpics/pat2.webp"
   },
   {
     url: "https://drive.google.com/drive/folders/1yvT54JRKg26ndQ27hkgBXbbYPpRzVPh0",
     eventName: "Navras 2023",
     date: "2023-10-29",
-    image: "/eventpics/nav3.jpg"
+    image: "/eventpics/nav3.webp"
   },
   {
     url: "https://drive.google.com/drive/folders/1RZMP1VoKl23LdfZ1z0RfTNbL9OZ7c2B8",
     eventName: "Patang Utsav 2023",
     date: "2023-01-17",
-    image: "/eventpics/pat3.jpg"
+    image: "/eventpics/pat3.webp"
   }
 ]
 
@@ -96,6 +96,7 @@ const Images = () => {
                 src={img.imageUrl || img.url || img.src}
                 alt={img.caption || `Gallery ${idx + 1}`}
                 className={styles.sampleImage}
+                loading="lazy"
               />
             )) : (
               <p>No gallery images uploaded yet.</p>
@@ -121,6 +122,7 @@ const Images = () => {
                 src={event.image || "/placeholder_event.jpg"}
                 alt={event.eventName}
                 className={styles.eventImage}
+                loading="lazy"
               />
               <div className={styles.imageInfo}>
                 <h3>{event.eventName}</h3>
